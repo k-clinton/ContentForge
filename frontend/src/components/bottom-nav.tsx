@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, PlusCircle, History, Star } from "lucide-react";
+import { LayoutDashboard, PlusCircle, History, Star, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export function BottomNav() {
@@ -15,14 +15,15 @@ export function BottomNav() {
   }, []);
 
   const navItems = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Home", href: "/", icon: LayoutDashboard },
     { name: "New", href: "/new-repurpose", icon: PlusCircle },
-    { name: "History", href: "/history", icon: History },
-    { name: "Favorites", href: "/favorites", icon: Star },
+    { name: "Archive", href: "/history", icon: History },
+    { name: "Vault", href: "/favorites", icon: Star },
+    { name: "Config", href: "/settings", icon: Settings },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-24 bg-surface-container border-t border-white/5 flex items-center justify-around px-8 z-50 pb-4">
+    <nav className="md:hidden fixed bottom-6 left-6 right-6 h-20 bg-surface/80 backdrop-blur-2xl border border-white/10 flex items-center justify-around px-6 z-50 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
       {navItems.map((item) => {
         const isActive = mounted && pathname === item.href;
         const Icon = item.icon;
@@ -31,22 +32,22 @@ export function BottomNav() {
             key={item.name}
             href={item.href}
             className={cn(
-              "flex flex-col items-center gap-2 transition-colors duration-300 relative group",
-              isActive ? "text-indigo-400" : "text-zinc-500 hover:text-zinc-300"
+              "flex flex-col items-center gap-1.5 transition-all duration-300 relative group",
+              isActive ? "text-indigo-400 scale-110" : "text-zinc-500"
             )}
           >
-            {isActive && (
-              <div className="absolute -top-4 w-12 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full blur-sm" />
-            )}
             <Icon 
-              size={24}
+              size={22}
               strokeWidth={isActive ? 2.5 : 2}
               className={cn(
                 "transition-transform duration-300",
-                isActive ? "scale-110" : "group-hover:scale-110"
+                isActive ? "drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" : "group-active:scale-90"
               )}
             />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{item.name}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">{item.name}</span>
+            {isActive && (
+              <div className="absolute -bottom-2 w-1 h-1 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,1)]" />
+            )}
           </Link>
         );
       })}
