@@ -2,13 +2,11 @@ import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { 
   Check, 
-  Zap, 
   Coins, 
   Plus, 
   Crown, 
   Gem, 
   Sparkles,
-  TrendingUp,
   ArrowRight
 } from "lucide-react";
 
