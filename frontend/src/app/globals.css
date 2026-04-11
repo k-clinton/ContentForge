@@ -1,0 +1,186 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-manrope);
+  
+  --color-surface-container-low: var(--surface-container-low);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-on-error-container: var(--on-error-container);
+  --color-surface: var(--surface);
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-error: var(--error);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-error: var(--on-error);
+  --color-on-surface: var(--on-surface);
+  --color-inverse-primary: var(--inverse-primary);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-outline: var(--outline);
+  --color-surface-container: var(--surface-container);
+  --color-surface-variant: var(--surface-variant);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-primary-container: var(--primary-container);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-error-container: var(--error-container);
+  --color-secondary: var(--secondary);
+  --color-on-secondary-fixed: var(--on-secondary-fixed);
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-surface-tint: var(--surface-tint);
+  --color-on-background: var(--on-background);
+  --color-outline-variant: var(--outline-variant);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-primary: var(--primary);
+  --color-primary-fixed: var(--primary-fixed);
+  --color-surface-dim: var(--surface-dim);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-on-secondary-fixed-variant: var(--on-secondary-fixed-variant);
+  --color-on-primary: var(--on-primary);
+  --color-on-tertiary-fixed-variant: var(--on-tertiary-fixed-variant);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-on-secondary: var(--on-secondary);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
+  --color-tertiary: var(--tertiary);
+  --color-surface-bright: var(--surface-bright);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #121216;
+  --card-foreground: #fafafa;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #a855f7;
+  --secondary-foreground: #ffffff;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #6366f1;
+  --radius: 0.75rem;
+
+  /* Premium Gradients */
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
+  --surface-gradient: linear-gradient(180deg, rgba(24, 24, 27, 0.8) 0%, rgba(9, 9, 11, 1) 100%);
+
+  /* Stitch Design Colors Refined */
+  --surface-container-low: #121216;
+  --inverse-on-surface: #3f3f46;
+  --on-tertiary: #ffffff;
+  --on-error-container: #fee2e2;
+  --surface: #09090b;
+  --tertiary-fixed: #dcfce7;
+  --error: #ef4444;
+  --primary-fixed-dim: #818cf8;
+  --on-error: #ffffff;
+  --on-surface: #fafafa;
+  --inverse-primary: #4f46e5;
+  --surface-container-highest: #27272a;
+  --on-secondary-container: #f3e8ff;
+  --on-primary-container: #e0e7ff;
+  --outline: #52525b;
+  --surface-container: #18181b;
+  --surface-variant: #27272a;
+  --surface-container-lowest: #050507;
+  --primary-container: #312e81;
+  --tertiary-container: #14532d;
+  --error-container: #7f1d1d;
+  --secondary: #a855f7;
+  --on-secondary-fixed: #2e1065;
+  --secondary-fixed: #f3e8ff;
+  --tertiary-fixed-dim: #86efac;
+  --on-primary-fixed: #1e1b4b;
+  --surface-tint: #6366f1;
+  --on-background: #fafafa;
+  --outline-variant: #3f3f46;
+  --surface-container-high: #1c1c21;
+  --primary: #6366f1;
+  --primary-fixed: #e0e7ff;
+  --surface-dim: #09090b;
+  --secondary-fixed-dim: #d8b4fe;
+  --secondary-container: #581c87;
+  --on-tertiary-container: #dcfce7;
+  --on-secondary-fixed-variant: #7e22ce;
+  --on-primary: #ffffff;
+  --on-tertiary-fixed-variant: #166534;
+  --inverse-surface: #fafafa;
+  --on-surface-variant: #a1a1aa;
+  --on-secondary: #ffffff;
+  --on-primary-fixed-variant: #4338ca;
+  --tertiary: #22c55e;
+  --surface-bright: #27272a;
+  --on-tertiary-fixed: #052e16;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+
