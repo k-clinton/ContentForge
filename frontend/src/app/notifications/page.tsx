@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { 
@@ -10,53 +11,47 @@ import {
   AlertCircle,
   ChevronRight,
   Clock,
-  MoreVertical
+  MoreVertical,
+  Loader2
 } from "lucide-react";
 
-const notifications = [
-  {
-    id: 1,
-    title: "Alchemy Complete",
-    description: "Your video 'Product Launch Teaser' has been successfully repurposed into 5 Twitter threads and 3 LinkedIn posts.",
-    type: "success",
-    time: "2 mins ago",
-    icon: Sparkles,
-    color: "text-emerald-400",
-    bg: "bg-emerald-400/10",
-  },
-  {
-    id: 2,
-    title: "Credit Balance Low",
-    description: "You have less than 500 alchemy credits remaining. Upgrade your plan to ensure uninterrupted forge operations.",
-    type: "warning",
-    time: "1 hour ago",
-    icon: Zap,
-    color: "text-amber-400",
-    bg: "bg-amber-400/10",
-  },
-  {
-    id: 3,
-    title: "System Maintenance",
-    description: "ContentForge will undergo scheduled maintenance on Sunday at 02:00 UTC. Expect minor latency during this window.",
-    type: "info",
-    time: "5 hours ago",
-    icon: AlertCircle,
-    color: "text-indigo-400",
-    bg: "bg-indigo-400/10",
-  },
-  {
-    id: 4,
-    title: "New Integration Available",
-    description: "You can now connect your TikTok account directly to ContentForge for seamless publishing.",
-    type: "update",
-    time: "1 day ago",
-    icon: CircleCheck,
-    color: "text-purple-400",
-    bg: "bg-purple-400/10",
-  }
-];
+const ICON_MAP: Record<string, any> = {
+  Sparkles,
+  Zap,
+  AlertCircle,
+  CircleCheck,
+};
 
 export default function NotificationsPage() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No authentication token found");
+
+        const response = await fetch("http://localhost:8080/api/notifications", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch notifications");
+
+        const data = await response.json();
+        setNotifications(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
   return (
     <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden">
       <Sidebar />
@@ -87,37 +82,57 @@ export default function NotificationsPage() {
           </section>
 
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            {notifications.map((notif) => (
-              <div 
-                key={notif.id}
-                className="group relative bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 hover:bg-white/10 transition-all cursor-pointer overflow-hidden"
-              >
-                <div className="flex gap-6 items-start">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${notif.bg} ${notif.color} border border-white/5 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
-                    <notif.icon size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-black text-white group-hover:text-indigo-400 transition-colors">{notif.title}</h3>
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-                          <Clock size={12} />
-                          {notif.time}
-                        </span>
-                        <button className="text-zinc-700 hover:text-white transition-colors">
-                          <MoreVertical size={16} />
-                        </button>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-white/5 rounded-[2rem] border border-white/5">
+                <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
+                <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Synchronizing Notifications...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-red-500/5 rounded-[2rem] border border-red-500/10">
+                <AlertCircle className="w-10 h-10 text-red-400 mb-4" />
+                <p className="text-red-400 font-bold uppercase tracking-widest text-[10px]">{error}</p>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-white/5 rounded-[2rem] border border-white/5">
+                <Bell className="w-10 h-10 text-zinc-700 mb-4" />
+                <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">No notifications found</p>
+              </div>
+            ) : (
+              notifications.map((notif) => {
+                const Icon = ICON_MAP[notif.icon] || Bell;
+                return (
+                  <div 
+                    key={notif.id}
+                    className="group relative bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 hover:bg-white/10 transition-all cursor-pointer overflow-hidden"
+                  >
+                    <div className="flex gap-6 items-start">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${notif.bg} ${notif.color} border border-white/5 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+                        <Icon size={24} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-lg font-black text-white group-hover:text-indigo-400 transition-colors">{notif.title}</h3>
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                              <Clock size={12} />
+                              {new Date(notif.createdAt).toLocaleDateString()}
+                            </span>
+                            <button className="text-zinc-700 hover:text-white transition-colors">
+                              <MoreVertical size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-zinc-500 font-medium leading-relaxed max-w-2xl">{notif.description}</p>
+                      </div>
+                      <div className="flex items-center px-4 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ChevronRight size={20} className="text-indigo-400" />
                       </div>
                     </div>
-                    <p className="text-zinc-500 font-medium leading-relaxed max-w-2xl">{notif.description}</p>
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-indigo-500 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <div className="flex items-center px-4 self-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight size={20} className="text-indigo-400" />
-                  </div>
-                </div>
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-indigo-500 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
+                );
+              })
+            )}
           </div>
           
           <div className="mt-12 flex justify-center">
