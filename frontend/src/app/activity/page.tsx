@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { 
@@ -11,51 +12,10 @@ import {
   BarChart3,
   Flame,
   Cpu,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
-
-const activities = [
-  {
-    id: 1,
-    task: "Bulk Repurpose: Product Demo",
-    engine: "Alchemy Engine v2.4",
-    status: "Completed",
-    tokens: "18.4k",
-    time: "12 mins ago",
-    progress: 100,
-    impact: "+245% Reach"
-  },
-  {
-    id: 2,
-    task: "Viral Thread Synthesis",
-    engine: "ContentForge Llama 3",
-    status: "Processing",
-    tokens: "4.2k",
-    time: "Ongoing",
-    progress: 64,
-    impact: "Calculating..."
-  },
-  {
-    id: 3,
-    task: "LinkedIn Authority Series",
-    engine: "Alchemy Engine v2.4",
-    status: "Completed",
-    tokens: "32.1k",
-    time: "2 hours ago",
-    progress: 100,
-    impact: "+180% Engagement"
-  },
-  {
-    id: 4,
-    task: "Newsletter Auto-Draft",
-    engine: "System Scheduler",
-    status: "Scheduled",
-    tokens: "0",
-    time: "In 4 hours",
-    progress: 0,
-    impact: "N/A"
-  }
-];
 
 const stats = [
   { label: "Synthesis Rate", value: "98.2%", icon: Cpu, color: "text-indigo-400" },
@@ -65,6 +25,35 @@ const stats = [
 ];
 
 export default function ActivityPage() {
+  const [activities, setActivities] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Authentication required");
+
+        const response = await fetch("http://localhost:8080/api/activity", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch activity logs");
+
+        const data = await response.json();
+        setActivities(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchActivity();
+  }, []);
   return (
     <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden">
       <Sidebar />
@@ -129,11 +118,32 @@ export default function ActivityPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {activities.map((act) => (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6} className="px-10 py-20 text-center">
+                        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Loading Telemetry...</span>
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={6} className="px-10 py-20 text-center">
+                        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-4" />
+                        <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">{error}</span>
+                      </td>
+                    </tr>
+                  ) : activities.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-10 py-20 text-center">
+                        <Activity className="w-8 h-8 text-zinc-700 mx-auto mb-4" />
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">No recent operations</span>
+                      </td>
+                    </tr>
+                  ) : activities.map((act) => (
                     <tr key={act.id} className="group hover:bg-white/[0.02] transition-colors">
                       <td className="px-10 py-8">
                         <div className="font-bold text-white mb-1">{act.task}</div>
-                        <div className="text-xs text-zinc-600">ID: FORGE-{1000 + act.id}</div>
+                        <div className="text-xs text-zinc-600">ID: FORGE-{act.id.slice(-4).toUpperCase()}</div>
                       </td>
                       <td className="px-10 py-8">
                         <div className="flex items-center gap-3">
@@ -164,7 +174,7 @@ export default function ActivityPage() {
                         </span>
                       </td>
                       <td className="px-10 py-8 text-right">
-                        <span className="text-xs font-bold text-zinc-600">{act.time}</span>
+                        <span className="text-xs font-bold text-zinc-600">{new Date(act.createdAt).toLocaleDateString()}</span>
                       </td>
                     </tr>
                   ))}
