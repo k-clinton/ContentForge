@@ -1,17 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { 
-  Bell, 
-  Search, 
-  ChevronDown, 
-  User, 
-  Settings, 
-  LogOut, 
+import {
+  Bell,
+  Search,
+  ChevronDown,
+  User,
+  Settings,
+  LogOut,
   Activity,
   Zap
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface TopNavProps {
   title: string;
@@ -19,6 +19,18 @@ interface TopNavProps {
 
 export function TopNav({ title }: TopNavProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className="flex justify-between items-center w-full px-12 py-6 bg-surface/80 backdrop-blur-xl border-b border-white/5 font-heading tracking-tight font-semibold z-40 sticky top-0 transition-all duration-500">
@@ -61,7 +73,7 @@ export function TopNav({ title }: TopNavProps) {
           </button>
         </div>
 
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-3 p-1.5 bg-white/5 hover:bg-white/10 rounded-[1.25rem] border border-white/5 transition-all group"
