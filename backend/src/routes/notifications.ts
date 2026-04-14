@@ -5,7 +5,7 @@ import type { AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
-router.get('/', authMiddleware, async (req: AuthRequest, res: any) => {
+router.get('/', authMiddleware, async (req: AuthRequest, res: express.Response) => {
   try {
     const notifications = await prisma.notification.findMany({
       where: { userId: req.user!.userId },
@@ -17,10 +17,18 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: any) => {
   }
 });
 
-router.patch('/:id/read', authMiddleware, async (req: AuthRequest, res: any) => {
+router.patch('/:id/read', authMiddleware, async (req: AuthRequest, res: express.Response) => {
   try {
+    const notification = await prisma.notification.findUnique({
+      where: { id: String(req.params.id) }
+    });
+
+    if (!notification || notification.userId !== req.user!.userId) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
     await prisma.notification.update({
-      where: { id: String(req.params.id), userId: req.user!.userId },
+      where: { id: String(req.params.id) },
       data: { isRead: true }
     });
     res.json({ message: 'Marked as read' });
