@@ -20,6 +20,8 @@ model User {
   plan          String         @default("Pro Member")
   notifications Notification[]
   activities    Activity[]
+  synthesisJobs SynthesisJob[]
+  vaultItems    VaultItem[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -49,4 +51,29 @@ model Activity {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model SynthesisJob {
+  id          String   @id @default(cuid())
+  sourceText  String?  @db.Text
+  url         String?
+  outputText  String   @db.Text
+  platform    String   // e.g., "LinkedIn", "Twitter"
+  voice       String   // e.g., "Professional"
+  depth       Int      @default(70)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model VaultItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  content     String   @db.Text
+  platform    String
+  image       String?  @db.Text
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
 }
