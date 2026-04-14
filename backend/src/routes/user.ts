@@ -1,0 +1,65 @@
+import express from 'express';
+import prisma from '../lib/prisma';
+import { authMiddleware, type AuthRequest } from '../middleware/auth';
+import bcrypt from 'bcryptjs';
+
+const router = express.Router();
+
+// Get the user info
+router.get('/me', authMiddleware, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, credits: true, plan: true, createdAt: true }
+    });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    return res.status(200).json(user);
+  } catch (err: any) {
+    return res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+});
+
+// Update the user info
+router.put('/settings', authMiddleware, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const { name, email, password } = req.body;
+
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (email) {
+      // Check if email is already taken by another user
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ message: 'Email is already in use' });
+      }
+      updateData.email = email;
+    }
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    // If nothing to update, return early
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { name: true, email: true, credits: true, plan: true }
+    });
+
+    return res.status(200).json({ message: 'Settings updated successfully', user: updatedUser });
+  } catch (err: any) {
+    return res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+});
+
+export default router;
