@@ -1,17 +1,15 @@
 {
-  "include": ["src"],
+  "include": ["src", "prisma"],
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "esnext",
-    "target": "esnext",
-    "types": [],
-    // For nodejs:
+    "types": ["node"],
     // "lib": ["esnext"],
     // "types": ["node"],
     // and npm install -D @types/node
@@ -44,6 +42,6 @@
 
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node10",
+    "moduleResolution": "bundler",
   }
 }
