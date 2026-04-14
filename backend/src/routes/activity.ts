@@ -5,7 +5,7 @@ import type { AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
-router.get('/', authMiddleware, async (req: AuthRequest, res: any) => {
+router.get('/', authMiddleware, async (req: AuthRequest, res: express.Response) => {
   try {
     const activities = await prisma.activity.findMany({
       where: { userId: req.user!.userId },
