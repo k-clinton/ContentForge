@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
     });
 
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name || '' } });
   } catch (error) {
     res.status(500).json({ message: 'Error creating user' });
   }
@@ -47,7 +47,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Profile
-router.get('/me', authMiddleware, async (req: AuthRequest, res: any) => {
+router.get('/me', authMiddleware, async (req: AuthRequest, res: express.Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.userId },
