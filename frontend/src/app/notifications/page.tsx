@@ -33,7 +33,7 @@ export default function NotificationsPage() {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No authentication token found");
 
-        const response = await fetch("http://localhost:8080/api/notifications", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/notifications`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
