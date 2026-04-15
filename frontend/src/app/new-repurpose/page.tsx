@@ -20,10 +20,28 @@ export default function NewRepurpose() {
   const [url, setUrl] = useState("");
   const [voice, setVoice] = useState("Professional");
   const [depth, setDepth] = useState(70);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{ outputText: string; voice: string; platform: string; id?: string } | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      // Read file content if it's a text file
+      if (file.type.startsWith('text/') || file.type === 'application/pdf' || file.type === 'application/msword' || file.type.includes('document')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result && typeof event.target.result === 'string') {
+            setSourceText(event.target.result.substring(0, 5000)); // Limit to first 5000 chars
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+  };
 
   const handleSynthesize = async () => {
     if (!sourceText && !url) return alert("Please provide source text or a URL");
@@ -45,7 +63,7 @@ export default function NewRepurpose() {
       if (!response.ok) throw new Error("Synthesis failed");
       const data = await response.json();
       setResult(data.job);
-    } catch (err) {
+    } catch {
       alert("Failed to synthesize content");
     } finally {
       setIsGenerating(false);
@@ -71,7 +89,7 @@ export default function NewRepurpose() {
         })
       });
       setIsSaved(true);
-    } catch (err) {
+    } catch {
       alert("Failed to save to vault");
     }
   };
@@ -176,10 +194,18 @@ export default function NewRepurpose() {
                     </div>
                     <div className="space-y-4">
                       <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Upload File</label>
-                      <div className="border-2 border-dashed border-white/5 bg-black/20 rounded-2xl py-2 px-6 flex items-center justify-center gap-4 text-zinc-500 hover:bg-white/5 hover:border-indigo-500/20 transition-all cursor-pointer group h-[58px]">
+                      <label className="border-2 border-dashed border-white/5 bg-black/20 rounded-2xl py-2 px-6 flex items-center justify-center gap-4 text-zinc-500 hover:bg-white/5 hover:border-indigo-500/20 transition-all cursor-pointer group h-[58px]">
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt,.md"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
                         <UploadCloud size={20} className="group-hover:text-indigo-400 transition-colors" />
-                        <span className="text-sm font-bold">Drop PDF or DOCX</span>
-                      </div>
+                        <span className="text-sm font-bold">
+                          {uploadedFile ? uploadedFile.name : "Drop PDF or DOCX"}
+                        </span>
+                      </label>
                     </div>
                   </div>
                 </div>
