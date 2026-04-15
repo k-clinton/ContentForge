@@ -1,19 +1,36 @@
+"use client";
+
+import { useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
-import { 
-  Search, 
-  Book, 
-  MessageSquare, 
-  LifeBuoy, 
-  Zap, 
-  ArrowRight, 
-  PlayCircle, 
+import {
+  Search,
+  Book,
+  MessageSquare,
+  LifeBuoy,
+  Zap,
+  ArrowRight,
+  PlayCircle,
   FileText,
   ChevronRight,
   ExternalLink
 } from "lucide-react";
 
 export default function Help() {
+  const [expandedFaqs, setExpandedFaqs] = useState<Set<number>>(new Set());
+
+  const toggleFaq = (index: number) => {
+    setExpandedFaqs(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
   const categories = [
     { name: "Getting Started", icon: PlayCircle, count: 12, color: "text-indigo-400" },
     { name: "AI Synthesis Tips", icon: Zap, count: 8, color: "text-purple-400" },
@@ -87,12 +104,23 @@ export default function Help() {
                 <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
               </h2>
               {faqs.map((faq, idx) => (
-                <div key={idx} className="bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:bg-white/[0.08] transition-all group cursor-pointer">
+                <div
+                  key={idx}
+                  onClick={() => toggleFaq(idx)}
+                  className="bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:bg-white/[0.08] transition-all group cursor-pointer"
+                >
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-white font-bold text-lg">{faq.q}</h4>
-                    <PlusIcon />
+                    <div className={`w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-indigo-600 group-hover:text-white transition-all ${expandedFaqs.has(idx) ? 'bg-indigo-600 text-white' : ''}`}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 2.5V9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M2.5 6H9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
                   </div>
-                  <p className="text-zinc-500 text-sm leading-relaxed font-medium">{faq.a}</p>
+                  {expandedFaqs.has(idx) && (
+                    <p className="text-zinc-500 text-sm leading-relaxed font-medium">{faq.a}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -131,17 +159,6 @@ export default function Help() {
           </div>
         </div>
       </main>
-    </div>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 2.5V9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M2.5 6H9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
     </div>
   );
 }
