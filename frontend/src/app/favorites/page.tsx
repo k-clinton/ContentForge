@@ -7,13 +7,13 @@ import Image from "next/image";
 import {
   Heart,
   Copy,
-  Share2,
   Clock,
   Plus,
   Loader2,
   AlertCircle,
   ImageOff
 } from "lucide-react";
+import type { VaultItem } from "@/lib/types";
 
 const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   const [error, setError] = useState(false);
@@ -40,10 +40,11 @@ const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
 
 export default function Favorites() {
   const categories = ["All", "LinkedIn", "X", "Email", "Blog Posts"];
-  
-  const [favorites, setFavorites] = useState<any[]>([]);
+
+  const [favorites, setFavorites] = useState<VaultItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
 
   const fetchVault = async () => {
     try {
@@ -60,8 +61,9 @@ export default function Favorites() {
 
       const data = await response.json();
       setFavorites(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -81,10 +83,15 @@ export default function Favorites() {
         }
       });
       fetchVault();
-    } catch (e) {
+    } catch {
       alert("Failed to delete item.");
     }
   };
+
+  const filteredFavorites = favorites.filter(item => {
+    if (activeCategory === "All") return true;
+    return item.platform === activeCategory;
+  });
 
   return (
     <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden">
@@ -110,8 +117,9 @@ export default function Favorites() {
               {categories.map((cat) => (
                 <button
                   key={cat}
+                  onClick={() => setActiveCategory(cat)}
                   className={`px-6 py-2.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all ${
-                    cat === "All"
+                    cat === activeCategory
                       ? "bg-white text-black shadow-lg"
                       : "text-zinc-400 hover:text-white"
                   }`}
@@ -131,13 +139,17 @@ export default function Favorites() {
                <AlertCircle size={48} className="mb-4" />
                <span>{error}</span>
              </div>
-          ) : favorites.length === 0 ? (
+          ) : filteredFavorites.length === 0 && activeCategory !== "All" ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white/5 rounded-3xl border border-white/5">
+               <span className="text-zinc-500 font-bold">No items in {activeCategory} category.</span>
+             </div>
+          ) : filteredFavorites.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white/5 rounded-3xl border border-white/5">
                <span className="text-zinc-500 font-bold">Your vault is empty.</span>
              </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {favorites.map((item, idx) => (
+              {filteredFavorites.map((item, idx) => (
                 <div 
                   key={item.id} 
                   className="group relative bg-white/5 backdrop-blur-xl rounded-[2rem] overflow-hidden border border-white/5 hover:border-white/10 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-500/10 animate-in fade-in zoom-in-95 duration-500"
