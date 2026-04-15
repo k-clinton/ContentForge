@@ -1,23 +1,88 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
-import { 
-  Zap, 
-  Clock, 
-  BarChart3, 
-  FileText, 
-  Wallet, 
-  ArrowRight, 
-  Video, 
-  Mic, 
+import {
+  Zap,
+  Clock,
+  FileText,
+  Wallet,
+  Video,
+  Mic,
   Type,
   PlusCircle,
   ExternalLink,
   ChevronRight,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 
 export default function Dashboard() {
+  const [userData, setUserData] = useState<{ name?: string; credits?: number } | null>(null);
+  const [stats, setStats] = useState({ totalGenerated: 0, creditsUsed: 0, creditLimit: 2000 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUserData(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user data:", e);
+      }
+    }
+
+    // Fetch stats from backend
+    const fetchDashboardData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        
+        // Fetch history to count total generated
+        const [historyRes] = await Promise.all([
+          fetch(`${apiUrl}/api/history`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          })
+        ]);
+
+        if (historyRes.ok) {
+          const historyData = await historyRes.json();
+          setStats(prev => ({ ...prev, totalGenerated: historyData.length }));
+        }
+      } catch {
+        console.error("Failed to fetch dashboard data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const getFirstName = (name?: string) => {
+    if (!name) return "Creator";
+    return name.trim().split(" ")[0];
+  };
+
+  const creditPercentage = userData && userData.credits !== undefined 
+    ? ((userData.credits / stats.creditLimit) * 100).toFixed(0)
+    : 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-500" size={48} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden">
       <Sidebar />
@@ -33,7 +98,7 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
                 <h1 className="text-5xl font-black tracking-tight text-white mb-3 font-heading leading-tight">
-                   Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Alex</span>
+                   Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">{getFirstName(userData?.name)}</span>
                 </h1>
                 <p className="text-zinc-400 text-lg font-medium">What magic are we crafting today?</p>
               </div>
@@ -63,7 +128,7 @@ export default function Dashboard() {
                 </div>
                 <p className="text-zinc-500 text-xs tracking-[0.2em] uppercase font-bold mb-2">Total Generated</p>
                 <div className="flex items-end gap-3">
-                  <h3 className="text-5xl font-black text-white font-heading tracking-tighter">1,284</h3>
+                  <h3 className="text-5xl font-black text-white font-heading tracking-tighter">{stats.totalGenerated.toLocaleString()}</h3>
                   <span className="mb-2 text-emerald-400 text-sm font-bold flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <TrendingUp size={12} /> +12%
                   </span>
@@ -85,9 +150,9 @@ export default function Dashboard() {
                   <Wallet size={24} />
                 </div>
                 <p className="text-zinc-500 text-xs tracking-[0.2em] uppercase font-bold mb-2">Credits Remaining</p>
-                <h3 className="text-5xl font-black text-white font-heading tracking-tighter">842 <span className="text-zinc-600 text-2xl font-medium">/ 2,000</span></h3>
+                <h3 className="text-5xl font-black text-white font-heading tracking-tighter">{userData?.credits?.toLocaleString() || 0} <span className="text-zinc-600 text-2xl font-medium">/ {stats.creditLimit.toLocaleString()}</span></h3>
                 <div className="w-full bg-white/5 h-2 rounded-full mt-10 overflow-hidden ring-1 ring-white/5">
-                  <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full w-[42%] relative">
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full relative" style={{ width: `${creditPercentage}%` }}>
                     <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)] animate-[shimmer_2s_infinite] translate-x-[-100%]" />
                   </div>
                 </div>
