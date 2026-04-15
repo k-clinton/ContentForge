@@ -16,7 +16,9 @@ model User {
   password      String
   name          String?
   avatar        String?
+  apiKey        String?
   credits       Int            @default(2500)
+  maxCredits    Int            @default(2500)
   plan          String         @default("Pro Member")
   notifications Notification[]
   activities    Activity[]
