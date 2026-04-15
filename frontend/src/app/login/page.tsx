@@ -34,8 +34,9 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       router.push("/");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to sign in";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -108,11 +109,17 @@ export default function Login() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-zinc-300 hover:text-white">
+              <button
+                onClick={() => alert("Google OAuth coming soon!")}
+                className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-zinc-300 hover:text-white"
+              >
                 <GoogleIcon size={18} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Google</span>
               </button>
-              <button className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-zinc-300 hover:text-white">
+              <button
+                onClick={() => alert("GitHub OAuth coming soon!")}
+                className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-zinc-300 hover:text-white"
+              >
                 <GitHubIcon size={18} />
                 <span className="text-[10px] font-black uppercase tracking-widest">GitHub</span>
               </button>
