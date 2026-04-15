@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
-import { 
-  Activity, 
-  Zap, 
-  Clock, 
-  RefreshCw, 
-  ChevronRight,
+import {
+  Activity,
+  Clock,
+  RefreshCw,
   BarChart3,
   Flame,
   Cpu,
@@ -24,8 +22,19 @@ const stats = [
   { label: "Avg. ROI", value: "4.8x", icon: BarChart3, color: "text-emerald-400" },
 ];
 
+interface ActivityItem {
+  id: string;
+  task: string;
+  engine: string;
+  status: string;
+  tokens: string;
+  progress: number;
+  impact: string;
+  createdAt: string;
+}
+
 export default function ActivityPage() {
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -45,8 +54,9 @@ export default function ActivityPage() {
 
         const data = await response.json();
         setActivities(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
