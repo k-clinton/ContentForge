@@ -15,7 +15,9 @@ import {
   Loader2
 } from "lucide-react";
 
-const ICON_MAP: Record<string, any> = {
+import type { Notification } from "@/lib/types";
+
+const ICON_MAP: Record<string, React.ComponentType<{ size: number }>> = {
   Sparkles,
   Zap,
   AlertCircle,
@@ -23,7 +25,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -43,8 +45,9 @@ export default function NotificationsPage() {
 
         const data = await response.json();
         setNotifications(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
