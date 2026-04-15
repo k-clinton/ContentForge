@@ -1,16 +1,48 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
-import { 
-  Check, 
-  Coins, 
-  Plus, 
-  Crown, 
-  Gem, 
+import {
+  Check,
+  Coins,
+  Plus,
+  Crown,
+  Gem,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 
 export default function Pricing() {
+  const [userData, setUserData] = useState<{ credits?: number; plan?: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUserData(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user data:", e);
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const formatCredits = (credits?: number) => {
+    if (credits === undefined || credits === null) return "0";
+    return credits.toLocaleString();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-500" size={48} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden">
       <Sidebar />
@@ -39,7 +71,7 @@ export default function Pricing() {
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                   </div>
                   <div className="flex items-baseline gap-4 mb-10">
-                    <span className="text-7xl font-black text-white font-heading tracking-tighter">2,450</span>
+                    <span className="text-7xl font-black text-white font-heading tracking-tighter">{formatCredits(userData?.credits)}</span>
                     <span className="text-zinc-500 font-bold text-lg">credits remaining</span>
                   </div>
                   <div className="w-full bg-black/40 h-3 rounded-full mb-4 border border-white/5 overflow-hidden">
@@ -111,7 +143,9 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                <button className="w-full py-4 bg-zinc-800/50 text-zinc-400 font-black text-xs uppercase tracking-widest rounded-2xl border border-zinc-700/50 cursor-default">Current Plan</button>
+                <button className="w-full py-4 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-400 hover:text-white font-black text-xs uppercase tracking-widest rounded-2xl border border-zinc-700/50 transition-all">
+                  {userData?.plan === "Alchemist" ? "Current Plan" : "Select Plan"}
+                </button>
               </div>
 
               {/* Pro Plan - Featured */}
@@ -145,7 +179,9 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                <button className="w-full py-5 bg-white text-indigo-600 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-black/20 hover:scale-[1.03] active:scale-97 transition-all">Upgrade Now</button>
+                <button className="w-full py-5 bg-white text-indigo-600 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-black/20 hover:scale-[1.03] active:scale-97 transition-all">
+                  {userData?.plan === "Forge Master" || userData?.plan === "Pro Member" ? "Current Plan" : "Upgrade Now"}
+                </button>
               </div>
 
               {/* Enterprise Plan */}
@@ -178,7 +214,9 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                <button className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-black text-xs uppercase tracking-widest rounded-2xl border border-white/10 transition-all">Contact Sales</button>
+                <button className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-black text-xs uppercase tracking-widest rounded-2xl border border-white/10 transition-all">
+                  {userData?.plan === "Imperial Forge" ? "Current Plan" : "Contact Sales"}
+                </button>
               </div>
             </div>
           </section>
