@@ -4,26 +4,19 @@ import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { 
-  User, 
-  ShieldCheck, 
-  Key, 
-  Bell, 
-  Globe, 
-  CreditCard, 
-  Database,
-  ChevronRight,
-  Sparkles,
-  Zap,
-  CheckCircle2,
+import {
+  User,
+  ShieldCheck,
+  Key,
+  Bell,
+  Globe,
+  CreditCard,
   Lock,
-  Smartphone,
   Eye,
   EyeOff,
-  Clock,
-  ExternalLink,
   Save,
-  Loader2
+  Loader2,
+  ChevronRight
 } from "lucide-react";
 
 function SettingsContent() {
@@ -36,7 +29,7 @@ function SettingsContent() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [userData, setUserData] = useState<any>({ name: "", email: "", credits: 0, plan: "Pro" });
+  const [_userData, setUserData] = useState<{ name?: string; email?: string; credits?: number; plan?: string } | null>(null);
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
 
   useEffect(() => {
@@ -67,6 +60,7 @@ function SettingsContent() {
 
   useEffect(() => {
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = async () => {
