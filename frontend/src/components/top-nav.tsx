@@ -20,8 +20,18 @@ interface TopNavProps {
 export function TopNav({ title }: TopNavProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [userData, setUserData] = useState<{ name?: string; email?: string; plan?: string; credits?: number } | null>(null);
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUserData(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user data:", e);
+      }
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
@@ -31,6 +41,26 @@ export function TopNav({ title }: TopNavProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
+
+  const formatCredits = (credits?: number) => {
+    if (credits === undefined || credits === null) return "0";
+    return credits.toLocaleString();
+  };
 
   return (
     <header className="flex justify-between items-center w-full px-12 py-6 bg-surface/80 backdrop-blur-xl border-b border-white/5 font-heading tracking-tight font-semibold z-40 sticky top-0 transition-all duration-500">
@@ -69,7 +99,7 @@ export function TopNav({ title }: TopNavProps) {
           <div className="h-8 w-[1px] bg-white/5 mx-2" />
           <button className="flex items-center gap-3 px-5 py-2.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-2xl border border-indigo-500/20 transition-all group">
             <Zap size={16} fill="currentColor" className="group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-black tracking-tight">2,450</span>
+            <span className="text-sm font-black tracking-tight">{formatCredits(userData?.credits)}</span>
           </button>
         </div>
 
@@ -79,11 +109,11 @@ export function TopNav({ title }: TopNavProps) {
             className="flex items-center gap-3 p-1.5 bg-white/5 hover:bg-white/10 rounded-[1.25rem] border border-white/5 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/10 overflow-hidden relative shadow-lg group-hover:scale-105 transition-transform">
-               <div className="absolute inset-0 flex items-center justify-center text-white font-black text-xs">AK</div>
+               <div className="absolute inset-0 flex items-center justify-center text-white font-black text-xs">{getInitials(userData?.name)}</div>
             </div>
             <div className="hidden sm:block text-left px-1">
-              <p className="text-xs font-black text-white leading-tight">Alex Kappy</p>
-              <p className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-widest leading-tight">Pro Member</p>
+              <p className="text-xs font-black text-white leading-tight">{userData?.name || "User"}</p>
+              <p className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-widest leading-tight">{userData?.plan || "Free Member"}</p>
             </div>
             <ChevronDown size={14} className={`text-zinc-500 mr-2 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -92,7 +122,7 @@ export function TopNav({ title }: TopNavProps) {
             <div className="absolute top-full right-0 mt-4 w-64 bg-surface-container/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-3 animate-in fade-in slide-in-from-top-4 duration-300 z-50">
               <div className="p-4 border-b border-white/5 mb-2">
                 <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">Signed in as</p>
-                <p className="text-sm font-bold text-white truncate">alex@contentforge.ai</p>
+                <p className="text-sm font-bold text-white truncate">{userData?.email || "user@example.com"}</p>
               </div>
               <div className="space-y-1">
                 <Link href="/settings?section=account" className="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group">
@@ -104,10 +134,10 @@ export function TopNav({ title }: TopNavProps) {
                   <span className="text-sm font-bold">System Preferences</span>
                 </Link>
                 <div className="h-[1px] bg-white/5 my-2 mx-4" />
-                <Link href="/login" className="flex items-center gap-3 px-4 py-3 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-xl transition-all group">
+                <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-xl transition-all group">
                   <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
                   <span className="text-sm font-bold">Sign Out</span>
-                </Link>
+                </button>
               </div>
             </div>
           )}
