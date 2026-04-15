@@ -3,15 +3,13 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
-import { 
-  Search, 
-  Calendar, 
-  Filter, 
-  ChevronDown, 
-  Eye, 
-  Download, 
-  Trash2, 
-  Clock, 
+import {
+  Search,
+  Calendar,
+  Filter,
+  ChevronDown,
+  Eye,
+  Clock,
   Globe,
   Share2,
   Mail,
@@ -20,11 +18,13 @@ import {
   Loader2,
   AlertCircle
 } from "lucide-react";
+import type { SynthesisJob } from "@/lib/types";
 
 export default function History() {
-  const [historyItems, setHistoryItems] = useState<any[]>([]);
+  const [historyItems, setHistoryItems] = useState<SynthesisJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -42,8 +42,9 @@ export default function History() {
 
         const data = await response.json();
         setHistoryItems(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -51,6 +52,16 @@ export default function History() {
 
     fetchHistory();
   }, []);
+
+  const filteredHistory = historyItems.filter(item => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      item.platform?.toLowerCase().includes(query) ||
+      item.voice?.toLowerCase().includes(query) ||
+      item.outputText?.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden">
@@ -77,10 +88,12 @@ export default function History() {
                 <div className="flex items-center gap-4 w-full lg:w-auto">
                     <div className="relative group flex-1 lg:flex-none lg:w-80">
                       <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
-                      <input 
-                        className="w-full bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl pl-14 pr-6 py-4 text-sm text-white placeholder:text-zinc-700 focus:border-indigo-500/30 transition-all outline-none font-medium" 
-                        placeholder="Search transformations..." 
+                      <input
+                        className="w-full bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl pl-14 pr-6 py-4 text-sm text-white placeholder:text-zinc-700 focus:border-indigo-500/30 transition-all outline-none font-medium"
+                        placeholder="Search transformations..."
                         type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
                 </div>
@@ -125,13 +138,19 @@ export default function History() {
                         <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">{error}</span>
                       </td>
                     </tr>
-                  ) : historyItems.length === 0 ? (
+                  ) : filteredHistory.length === 0 && searchQuery ? (
+                    <tr>
+                      <td colSpan={4} className="px-10 py-20 text-center">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">No results found for &quot;{searchQuery}&quot;</span>
+                      </td>
+                    </tr>
+                  ) : filteredHistory.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-10 py-20 text-center">
                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">No history yet. Synthesize some content!</span>
                       </td>
                     </tr>
-                  ) : historyItems.map((item) => (
+                  ) : filteredHistory.map((item) => (
                     <tr key={item.id} className="group hover:bg-white/[0.02] transition-colors cursor-default">
                       <td className="px-10 py-8 whitespace-nowrap">
                         <div className="flex items-center gap-4">
@@ -172,7 +191,7 @@ export default function History() {
             </div>
             {/* Pagination placeholder */}
             <div className="px-10 py-8 border-t border-white/5 flex items-center justify-between bg-black/10">
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Showing {historyItems.length} results</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Showing {filteredHistory.length} results</span>
               <div className="flex items-center gap-2">
                 <button className="p-2 text-zinc-700 hover:text-white disabled:opacity-30" disabled>
                   <ChevronLeft size={18} />
