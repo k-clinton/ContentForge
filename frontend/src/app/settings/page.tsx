@@ -29,8 +29,8 @@ function SettingsContent() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [_userData, setUserData] = useState<{ name?: string; email?: string; credits?: number; plan?: string } | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [_userData, setUserData] = useState<{ name?: string; email?: string; credits?: number; plan?: string; apiKey?: string } | null>(null);
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", apiKey: "" });
 
   useEffect(() => {
     if (sectionParam && sectionParam !== activeSection) {
@@ -49,7 +49,7 @@ function SettingsContent() {
       if (response.ok) {
         const data = await response.json();
         setUserData(data);
-        setForm(f => ({ ...f, name: data.name, email: data.email }));
+        setForm(f => ({ ...f, name: data.name, email: data.email, apiKey: data.apiKey || "" }));
       }
     } catch (e) {
       console.error(e);
@@ -73,7 +73,12 @@ function SettingsContent() {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/user/settings`, {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, email: form.email, password: form.password || undefined })
+        body: JSON.stringify({ 
+          name: form.name, 
+          email: form.email, 
+          password: form.password || undefined,
+          apiKey: form.apiKey || undefined
+        })
       });
       alert("Settings saved successfully!");
       setForm(f => ({ ...f, password: "", confirmPassword: "" }));
@@ -196,12 +201,72 @@ function SettingsContent() {
         );
 
       case 'api':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 overflow-hidden">
+              <div className="p-10 border-b border-white/5 bg-white/[0.02]">
+                <h3 className="text-xl font-black font-heading text-white flex items-center gap-3">
+                  <Key size={20} className="text-indigo-400" />
+                  Alchemist API Keys
+                </h3>
+              </div>
+              <div className="p-10 space-y-8">
+                <div className="p-6 bg-indigo-500/10 rounded-3xl border border-indigo-500/20 text-sm text-indigo-200 font-medium">
+                  By adding your own Gemini API Key, you can enable unlimited generation and bypass platform-level credit limits.
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">Gemini API Key</label>
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"}
+                      value={form.apiKey}
+                      onChange={e => setForm({...form, apiKey: e.target.value})}
+                      className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white font-mono focus:border-indigo-500/30 transition-all outline-none" 
+                      placeholder="AIzaSy..."
+                    />
+                    <button 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-zinc-600 mt-2 px-1 italic">Your key is encrypted and stored securely. Used only for your own synthesis jobs.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'billing':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 overflow-hidden p-12 text-center">
+                <div className="w-20 h-20 bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-400 mx-auto mb-6">
+                  <CreditCard size={40} />
+                </div>
+                <h3 className="text-2xl font-black text-white mb-2">Alpha Pioneer Plan</h3>
+                <p className="text-zinc-500 font-medium mb-8">You currently have lifetime access to ContentForge Alpha.</p>
+                <div className="max-w-md mx-auto grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span className="block text-[10px] text-zinc-600 uppercase font-black mb-1">Status</span>
+                    <span className="text-emerald-400 font-bold">Active</span>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span className="block text-[10px] text-zinc-600 uppercase font-black mb-1">Billing</span>
+                    <span className="text-white font-bold">Free Alpha</span>
+                  </div>
+                </div>
+             </div>
+          </div>
+        );
+
       case 'notifications':
       case 'workspace':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] border border-white/5 rounded-3xl bg-white/[0.02]">
-             <span className="text-zinc-500 text-lg">Settings section available soon.</span>
+          <div className="flex flex-col items-center justify-center min-h-[400px] border border-white/5 rounded-[2.5rem] bg-white/[0.02]">
+             <Bell size={48} className="text-zinc-800 mb-4" />
+             <span className="text-zinc-500 text-lg font-medium">Section coming in the next update.</span>
           </div>
         );
       default:
