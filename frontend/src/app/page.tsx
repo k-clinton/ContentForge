@@ -22,6 +22,7 @@ import {
 export default function Dashboard() {
   const [userData, setUserData] = useState<{ name?: string; credits?: number } | null>(null);
   const [stats, setStats] = useState({ totalGenerated: 0, creditsUsed: 0, creditLimit: 2000 });
+  const [recentJobs, setRecentJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function Dashboard() {
         if (historyRes.ok) {
           const historyData = await historyRes.json();
           setStats(prev => ({ ...prev, totalGenerated: historyData.length }));
+          setRecentJobs(historyData.slice(0, 2));
         }
       } catch {
         console.error("Failed to fetch dashboard data");
@@ -74,6 +76,31 @@ export default function Dashboard() {
   const creditPercentage = userData && userData.credits !== undefined 
     ? ((userData.credits / stats.creditLimit) * 100).toFixed(0)
     : 0;
+
+  const getPlatformIcon = (platform: string) => {
+    const p = platform.toLowerCase();
+    if (p.includes('video') || p.includes('youtube')) return <Video size={24} />;
+    if (p.includes('audio') || p.includes('podcast') || p.includes('mic')) return <Mic size={24} />;
+    return <Type size={24} />;
+  };
+
+  const getPlatformBgIcon = (platform: string) => {
+    const p = platform.toLowerCase();
+    if (p.includes('video') || p.includes('youtube')) return <Video size={64} />;
+    if (p.includes('audio') || p.includes('podcast') || p.includes('mic')) return <Mic size={64} />;
+    return <Type size={64} />;
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    return `${Math.floor(diffInHours / 24)}d ago`;
+  };
 
   if (isLoading) {
     return (
@@ -178,53 +205,45 @@ export default function Dashboard() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Modern Card 1 */}
-                <div className="bg-white/5 hover:bg-white/[0.08] p-6 rounded-3xl border border-white/5 hover:border-indigo-500/30 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-6 text-zinc-800 opacity-20 group-hover:opacity-40 transition-opacity">
-                    <Mic size={64} />
-                  </div>
-                  <div className="relative z-10">
-                    <div className="flex gap-4 items-center mb-6">
-                      <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 ring-1 ring-indigo-500/30 group-hover:scale-110 transition-transform">
-                        <Mic size={24} />
+                {recentJobs.length > 0 ? (
+                  recentJobs.map((job) => (
+                    <div key={job.id} className="bg-white/5 hover:bg-white/[0.08] p-6 rounded-3xl border border-white/5 hover:border-indigo-500/30 transition-all duration-300 group cursor-pointer relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-6 text-zinc-800 opacity-20 group-hover:opacity-40 transition-opacity">
+                        {getPlatformBgIcon(job.platform)}
                       </div>
-                      <div>
-                        <h4 className="text-white font-bold group-hover:text-indigo-300 transition-colors">Podcast to LinkedIn</h4>
-                        <p className="text-zinc-500 text-xs font-medium">Synthesized 2h ago</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">Finalized</span>
-                      <div className="flex items-center gap-1 text-indigo-400 font-bold text-xs group-hover:translate-x-1 transition-transform">
-                        Review <ChevronRight size={14} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Modern Card 2 */}
-                <div className="bg-white/5 hover:bg-white/[0.08] p-6 rounded-3xl border border-white/5 hover:border-indigo-500/30 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-6 text-zinc-800 opacity-20 group-hover:opacity-40 transition-opacity">
-                    <Video size={64} />
-                  </div>
-                  <div className="relative z-10">
-                    <div className="flex gap-4 items-center mb-6">
-                      <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center text-purple-400 ring-1 ring-purple-500/30 group-hover:scale-110 transition-transform">
-                        <Video size={24} />
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold group-hover:text-purple-300 transition-colors">YouTube to Thread</h4>
-                        <p className="text-zinc-500 text-xs font-medium">Synthesized 5h ago</p>
+                      <div className="relative z-10">
+                        <div className="flex gap-4 items-center mb-6">
+                          <div className={`w-12 h-12 ${job.platform.toLowerCase().includes('video') ? 'bg-purple-500/20 text-purple-400' : 'bg-indigo-500/20 text-indigo-400'} rounded-2xl flex items-center justify-center ring-1 ring-white/10 group-hover:scale-110 transition-transform`}>
+                            {getPlatformIcon(job.platform)}
+                          </div>
+                          <div>
+                            <h4 className="text-white font-bold group-hover:text-indigo-300 transition-colors truncate max-w-[150px]">
+                              {job.platform} Synthesis
+                            </h4>
+                            <p className="text-zinc-500 text-xs font-medium">{getTimeAgo(job.createdAt)}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">Finalized</span>
+                          <div className="flex items-center gap-1 text-indigo-400 font-bold text-xs group-hover:translate-x-1 transition-transform">
+                            Review <ChevronRight size={14} />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">Processing</span>
-                      <div className="flex items-center gap-1 text-indigo-400 font-bold text-xs group-hover:translate-x-1 transition-transform">
-                        View Status <ChevronRight size={14} />
-                      </div>
+                  ))
+                ) : (
+                  <div className="md:col-span-2 bg-white/5 border border-dashed border-white/10 p-12 rounded-3xl flex flex-col items-center justify-center text-center group transition-colors hover:border-indigo-500/30">
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-zinc-600 mb-4 group-hover:text-indigo-400">
+                      <Zap size={32} />
                     </div>
+                    <p className="text-zinc-400 font-bold">No alchemy yet</p>
+                    <p className="text-zinc-600 text-sm mt-1 mb-6">Start your first repurpose to see it here</p>
+                    <button className="bg-indigo-600/20 text-indigo-400 px-6 py-2 rounded-xl text-sm font-bold border border-indigo-500/30 hover:bg-indigo-600 hover:text-white transition-all">
+                      Create Transformation
+                    </button>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -241,11 +260,15 @@ export default function Dashboard() {
                 
                 <div className="space-y-3">
                   {[
-                    { icon: Mic, label: "Audio to Post", color: "white/10" },
-                    { icon: Video, label: "Video to Reel", color: "white/10" },
-                    { icon: Type, label: "Text to Thread", color: "white/10" }
+                    { icon: Mic, label: "Audio to Post", type: "audio", color: "white/10" },
+                    { icon: Video, label: "Video to Reel", type: "video", color: "white/10" },
+                    { icon: Type, label: "Text to Thread", type: "text", color: "white/10" }
                   ].map((action, i) => (
-                    <button key={i} className="w-full flex items-center justify-between p-4 bg-white/10 backdrop-blur-md rounded-2xl hover:bg-white/20 transition-all group border border-white/10">
+                    <button 
+                      key={i} 
+                      onClick={() => router.push(`/new-repurpose?type=${action.type}`)}
+                      className="w-full flex items-center justify-between p-4 bg-white/10 backdrop-blur-md rounded-2xl hover:bg-white/20 transition-all group border border-white/10"
+                    >
                       <div className="flex items-center gap-3">
                         <action.icon size={18} className="text-indigo-200" />
                         <span className="font-bold text-sm">{action.label}</span>
