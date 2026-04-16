@@ -12,13 +12,19 @@ import {
   Zap
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface TopNavProps {
   title: string;
 }
 
 export function TopNav({ title }: TopNavProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const q = searchParams.get('q') || "";
+  
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(q);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userData, setUserData] = useState<{ name?: string; email?: string; plan?: string; credits?: number } | null>(null);
 
@@ -41,6 +47,26 @@ export function TopNav({ title }: TopNavProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setSearchQuery(q);
+  }, [q]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/history?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push(`/history`);
+    }
+  };
+
+  const handleInputChange = (val: string) => {
+    setSearchQuery(val);
+    // If we're already on a results-capable page like history or dashboard, 
+    // we could update the URL immediately with debounce, 
+    // but for now, we'll wait for Enter or just let the user type.
+  };
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
@@ -73,18 +99,19 @@ export function TopNav({ title }: TopNavProps) {
           </div>
         </div>
 
-        <div className="hidden lg:flex items-center gap-4 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 group focus-within:border-indigo-500/30 focus-within:bg-white/[0.08] transition-all duration-500 w-[400px]">
+        <form onSubmit={handleSearch} className="hidden lg:flex items-center gap-4 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 group focus-within:border-indigo-500/30 focus-within:bg-white/[0.08] transition-all duration-500 w-[400px]">
           <Search size={16} className="text-zinc-500 group-focus-within:text-indigo-400 group-focus-within:scale-110 transition-all" />
           <input 
             type="text" 
             placeholder="Search your library..." 
+            value={searchQuery}
+            onChange={(e) => handleInputChange(e.target.value)}
             className="bg-transparent border-none outline-none text-sm text-zinc-300 placeholder:text-zinc-600 w-full font-sans font-medium"
           />
           <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded-md border border-white/5 text-[10px] text-zinc-600 font-black">
-            <span className="opacity-50">CMD</span>
-            <span>K</span>
+            <span className="opacity-50">ENTER</span>
           </div>
-        </div>
+        </form>
       </div>
 
       <div className="flex items-center gap-8">
