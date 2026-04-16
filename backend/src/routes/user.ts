@@ -13,7 +13,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: express.Response
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, credits: true, plan: true, createdAt: true }
+      select: { id: true, name: true, email: true, credits: true, plan: true, createdAt: true, apiKey: true, maxCredits: true }
     });
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -29,10 +29,11 @@ router.put('/settings', authMiddleware, async (req: AuthRequest, res: express.Re
     const userId = req.user?.userId;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    const { name, email, password } = req.body;
+    const { name, email, password, apiKey } = req.body;
 
     const updateData: any = {};
     if (name) updateData.name = name;
+    if (apiKey !== undefined) updateData.apiKey = apiKey;
     if (email) {
       // Check if email is already taken by another user
       const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -53,7 +54,7 @@ router.put('/settings', authMiddleware, async (req: AuthRequest, res: express.Re
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: updateData,
-      select: { name: true, email: true, credits: true, plan: true }
+      select: { name: true, email: true, credits: true, plan: true, apiKey: true, maxCredits: true }
     });
 
     return res.status(200).json({ message: 'Settings updated successfully', user: updatedUser });
