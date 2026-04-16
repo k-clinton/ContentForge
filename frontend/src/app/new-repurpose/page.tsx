@@ -12,13 +12,17 @@ import {
   Loader2,
   Copy,
   Heart,
-  ChevronLeft
+  ChevronLeft,
+  Globe,
+  Share2,
+  Mail
 } from "lucide-react";
 
 export default function NewRepurpose() {
   const [sourceText, setSourceText] = useState("");
   const [url, setUrl] = useState("");
   const [voice, setVoice] = useState("Professional");
+  const [platform, setPlatform] = useState("LinkedIn");
   const [depth, setDepth] = useState(70);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
@@ -57,7 +61,7 @@ export default function NewRepurpose() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ sourceText, url, voice, depth, platform: "LinkedIn" })
+        body: JSON.stringify({ sourceText, url, voice, depth, platform })
       });
 
       if (!response.ok) throw new Error("Synthesis failed");
@@ -91,6 +95,13 @@ export default function NewRepurpose() {
       setIsSaved(true);
     } catch {
       alert("Failed to save to vault");
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (result) {
+      navigator.clipboard.writeText(result.outputText);
+      alert("Magic copied to clipboard!");
     }
   };
 
@@ -140,7 +151,7 @@ export default function NewRepurpose() {
                  {result.outputText}
                </div>
                <div className="mt-8 flex gap-4">
-                 <button className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+                 <button onClick={copyToClipboard} className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
                    <Copy size={18} /> Copy to Clipboard
                  </button>
                  <button 
@@ -213,10 +224,31 @@ export default function NewRepurpose() {
                 <div className="lg:col-span-4 space-y-8">
                   <div className="bg-white/5 border border-white/5 p-8 rounded-[2rem] space-y-8">
                     <div>
+                      <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-6 px-1">Target Platform</label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { id: 'LinkedIn', icon: Globe, label: 'LinkedIn' },
+                          { id: 'Twitter', icon: Share2, label: 'Twitter' },
+                          { id: 'Email', icon: Mail, label: 'Email' }
+                        ].map((p) => (
+                          <button 
+                            key={p.id}
+                            onClick={() => setPlatform(p.id)}
+                            className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${platform === p.id ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-black/40 border-white/5 text-zinc-500 hover:border-white/10'}`}
+                          >
+                            <p.icon size={20} className="mb-2" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">{p.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
                       <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-6 px-1">Brand Voice</label>
                       <div className="space-y-3">
                         {[
                           { id: 'Professional', label: 'Professional', desc: 'Expert & Authoritative' },
+                          { id: 'Creative', label: 'Creative Alchemy', desc: 'Inspired & Original' },
                           { id: 'Witty', label: 'Witty & Sharp', desc: 'Engaging & Bold' },
                           { id: 'Leader', label: 'Thought Leader', desc: 'Visionary & Strategic' }
                         ].map((v) => (
