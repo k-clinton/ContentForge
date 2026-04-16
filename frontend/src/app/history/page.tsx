@@ -18,13 +18,21 @@ import {
   Loader2,
   AlertCircle
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import type { SynthesisJob } from "@/lib/types";
 
 export default function History() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get('q') || "";
+  
   const [historyItems, setHistoryItems] = useState<SynthesisJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(q);
+
+  useEffect(() => {
+    setSearchQuery(q);
+  }, [q]);
 
   useEffect(() => {
     const fetchHistory = async () => {
