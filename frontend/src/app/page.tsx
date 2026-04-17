@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import {
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
+  const router = useRouter();
   const [userData, setUserData] = useState<{ name?: string; credits?: number } | null>(null);
   const [stats, setStats] = useState({ totalGenerated: 0, creditsUsed: 0, creditLimit: 2000 });
   const [recentJobs, setRecentJobs] = useState<any[]>([]);
