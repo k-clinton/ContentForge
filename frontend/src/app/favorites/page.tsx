@@ -13,6 +13,7 @@ import {
   AlertCircle,
   ImageOff
 } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import type { VaultItem } from "@/lib/types";
 
 const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
@@ -39,6 +40,7 @@ const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
 };
 
 export default function Favorites() {
+  const router = useRouter();
   const categories = ["All", "LinkedIn", "X", "Email", "Blog Posts"];
 
   const [favorites, setFavorites] = useState<VaultItem[]>([]);
@@ -46,10 +48,19 @@ export default function Favorites() {
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    fetchVault();
+  }, [router]);
+
   const fetchVault = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("Authentication required");
+      if (!token) return;
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/vault`, {
         headers: {
