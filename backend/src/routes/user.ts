@@ -63,4 +63,33 @@ router.put('/settings', authMiddleware, async (req: AuthRequest, res: express.Re
   }
 });
 
+// Get dashboard stats
+router.get('/dashboard-stats', authMiddleware, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const [user, totalJobs, activities] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { credits: true, maxCredits: true } }),
+      prisma.synthesisJob.count({ where: { userId } }),
+      prisma.activity.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 10 })
+    ]);
+
+    // Calculate time saved (15 mins per job)
+    const totalMinutesSaved = totalJobs * 15;
+    const hoursSaved = (totalMinutesSaved / 60).toFixed(1);
+
+    return res.status(200).json({
+      totalGenerated: totalJobs,
+      credits: user?.credits || 0,
+      creditLimit: user?.maxCredits || 2500,
+      hoursSaved: hoursSaved,
+      momentum: "+12%", // Mocking momentum for now
+      activities: activities
+    });
+  } catch (err: any) {
+    return res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+});
+
 export default router;
