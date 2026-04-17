@@ -23,11 +23,17 @@ import {
 export default function Dashboard() {
   const router = useRouter();
   const [userData, setUserData] = useState<{ name?: string; credits?: number } | null>(null);
-  const [stats, setStats] = useState({ totalGenerated: 0, creditsUsed: 0, creditLimit: 2000 });
+  const [stats, setStats] = useState({ totalGenerated: 0, creditsUsed: 0, creditLimit: 2500, hoursSaved: "0.0", momentum: "+0%" });
   const [recentJobs, setRecentJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login"); // Simple route protection
+      return;
+    }
+
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
@@ -40,24 +46,32 @@ export default function Dashboard() {
     // Fetch stats from backend
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setIsLoading(false);
-          return;
-        }
-
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
         
-        // Fetch history to count total generated
-        const [historyRes] = await Promise.all([
+        const [statsRes, historyRes] = await Promise.all([
+          fetch(`${apiUrl}/api/user/dashboard-stats`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          }),
           fetch(`${apiUrl}/api/history`, {
             headers: { "Authorization": `Bearer ${token}` }
           })
         ]);
 
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats({
+            totalGenerated: statsData.totalGenerated,
+            creditsUsed: statsData.creditLimit - statsData.credits,
+            creditLimit: statsData.creditLimit,
+            hoursSaved: statsData.hoursSaved,
+            momentum: statsData.momentum
+          });
+          // Update local credits if they changed
+          setUserData(prev => prev ? { ...prev, credits: statsData.credits } : null);
+        }
+
         if (historyRes.ok) {
           const historyData = await historyRes.json();
-          setStats(prev => ({ ...prev, totalGenerated: historyData.length }));
           setRecentJobs(historyData.slice(0, 2));
         }
       } catch {
@@ -68,7 +82,7 @@ export default function Dashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [router]);
 
   const getFirstName = (name?: string) => {
     if (!name) return "Creator";
@@ -139,7 +153,7 @@ export default function Dashboard() {
                 <div className="relative z-10">
                   <span className="block text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-bold mb-1">Weekly Momentum</span>
                   <p className="text-white font-semibold flex items-center gap-2">
-                    Saved <span className="text-indigo-400 font-black text-xl">18.4h</span>
+                    Saved <span className="text-indigo-400 font-black text-xl">{stats.hoursSaved}h</span>
                     <TrendingUp size={14} className="text-emerald-400" />
                   </p>
                 </div>
@@ -159,7 +173,7 @@ export default function Dashboard() {
                 <div className="flex items-end gap-3">
                   <h3 className="text-5xl font-black text-white font-heading tracking-tighter">{stats.totalGenerated.toLocaleString()}</h3>
                   <span className="mb-2 text-emerald-400 text-sm font-bold flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <TrendingUp size={12} /> +12%
+                    <TrendingUp size={12} /> {stats.momentum}
                   </span>
                 </div>
                 <div className="mt-8 flex gap-2">
