@@ -16,12 +16,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import type { SynthesisJob } from "@/lib/types";
 
+
 export default function History() {
+  const router = useRouter(); // Use useRouter for protection
   const searchParams = useSearchParams();
   const q = searchParams.get('q') || "";
   
@@ -29,17 +32,21 @@ export default function History() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState(q);
+  const [selectedItem, setSelectedItem] = useState<SynthesisJob | null>(null);
 
   useEffect(() => {
     setSearchQuery(q);
   }, [q]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     const fetchHistory = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("Authentication required");
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/history`, {
           headers: {
             "Authorization": `Bearer ${token}`
@@ -59,7 +66,7 @@ export default function History() {
     };
 
     fetchHistory();
-  }, []);
+  }, [router]);
 
   const filteredHistory = historyItems.filter(item => {
     if (!searchQuery) return true;
@@ -81,6 +88,7 @@ export default function History() {
         <TopNav title="History & Archive" />
         
         <div className="max-w-[1400px] mx-auto px-12 py-12">
+          {/* ... existing header and filters ... */}
           <section className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
              <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-12">
                 <div className="max-w-xl">
@@ -122,6 +130,7 @@ export default function History() {
 
           <section className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
             <div className="overflow-x-auto">
+              {/* ... table content ... */}
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/5">
@@ -186,7 +195,10 @@ export default function History() {
                       </td>
                       <td className="px-10 py-8 text-right">
                         <div className="flex justify-end gap-3">
-                          <button className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white bg-white/5 h-10 rounded-xl border border-white/5 hover:border-white/10 transition-all">
+                          <button 
+                            onClick={() => setSelectedItem(item)}
+                            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white bg-white/5 h-10 rounded-xl border border-white/5 hover:border-white/10 transition-all"
+                          >
                             <Eye size={14} />
                             View
                           </button>
@@ -197,8 +209,8 @@ export default function History() {
                 </tbody>
               </table>
             </div>
-            {/* Pagination placeholder */}
-            <div className="px-10 py-8 border-t border-white/5 flex items-center justify-between bg-black/10">
+            {/* ... pagination ... */}
+             <div className="px-10 py-8 border-t border-white/5 flex items-center justify-between bg-black/10">
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Showing {filteredHistory.length} results</span>
               <div className="flex items-center gap-2">
                 <button className="p-2 text-zinc-700 hover:text-white disabled:opacity-30" disabled>
@@ -214,6 +226,70 @@ export default function History() {
             </div>
           </section>
         </div>
+
+        {/* Selected Item Modal */}
+        {selectedItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-8">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setSelectedItem(null)} />
+            <div className="relative w-full max-w-4xl bg-surface-container rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+              <div className="p-10 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                <div>
+                  <h3 className="text-2xl font-black font-heading text-white">Synthesis Detail</h3>
+                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Forged on {new Date(selectedItem.createdAt).toLocaleString()}</p>
+                </div>
+                <button onClick={() => setSelectedItem(null)} className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+                  <Plus size={24} className="rotate-45" />
+                </button>
+              </div>
+              <div className="p-10 max-h-[70vh] overflow-y-auto space-y-10 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+                    <span className="block text-[10px] text-zinc-600 uppercase font-black mb-3 tracking-widest">Platform</span>
+                    <div className="flex items-center gap-3 text-white font-bold">
+                      {selectedItem.platform === 'LinkedIn' ? <Globe size={18} /> : selectedItem.platform === 'Twitter' ? <Share2 size={18} /> : <Mail size={18} />}
+                      {selectedItem.platform}
+                    </div>
+                  </div>
+                  <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+                    <span className="block text-[10px] text-zinc-600 uppercase font-black mb-3 tracking-widest">Aura / Voice</span>
+                    <div className="text-white font-bold">{selectedItem.voice}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-[10px] text-zinc-600 uppercase font-black px-1 tracking-widest">Source Context</label>
+                  <div className="bg-black/40 rounded-3xl p-8 border border-white/5 text-zinc-400 font-sans text-sm leading-relaxed max-h-40 overflow-y-auto">
+                    {selectedItem.sourceText || (selectedItem.url ? `Fetched from: ${selectedItem.url}` : "No source text provided.")}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-[10px] text-zinc-600 uppercase font-black px-1 tracking-widest">Forged Synthesis</label>
+                  <div className="bg-indigo-500/5 rounded-3xl p-8 border border-indigo-500/20 text-indigo-100 font-sans text-lg leading-relaxed whitespace-pre-wrap">
+                    {selectedItem.outputText}
+                  </div>
+                </div>
+              </div>
+              <div className="p-10 border-t border-white/5 bg-white/[0.01] flex justify-end gap-4">
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedItem.outputText);
+                      alert("Copied to clipboard!");
+                    }}
+                    className="px-8 py-4 bg-white/5 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all"
+                  >
+                    Copy to Clipboard
+                  </button>
+                  <button 
+                    onClick={() => setSelectedItem(null)}
+                    className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-500 transition-all"
+                  >
+                    Close Archive
+                  </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
