@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { 
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 
 export default function NewRepurpose() {
+  const router = useRouter();
   const [sourceText, setSourceText] = useState("");
   const [url, setUrl] = useState("");
   const [voice, setVoice] = useState("Professional");
@@ -29,6 +31,13 @@ export default function NewRepurpose() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<{ outputText: string; voice: string; platform: string; id?: string } | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
