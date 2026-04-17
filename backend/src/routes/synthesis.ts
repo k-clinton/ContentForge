@@ -17,15 +17,29 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: express.Response)
 
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    // Fetch user to check for personal API key
+    // Fetch user to check for personal API key and credit balance
     const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ message: 'User not found' });
     
     // Determine which API key to use (User's personal key > System key)
-    const effectiveApiKey = user?.apiKey || (process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' ? process.env.GEMINI_API_KEY : null);
+    const isUsingPersonalKey = !!user.apiKey;
+    const effectiveApiKey = user.apiKey || (process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' ? process.env.GEMINI_API_KEY : null);
+    
+    // Credit Check: Only if using system key
+    const jobCost = 50;
+    if (!isUsingPersonalKey && user.credits < jobCost) {
+      return res.status(403).json({ 
+        message: 'Insufficient credits', 
+        required: jobCost, 
+        current: user.credits 
+      });
+    }
+
     const activeGenAI = effectiveApiKey ? new GoogleGenerativeAI(effectiveApiKey) : null;
 
     let finalOutput = "";
     let tokenCount = "0";
+    let isSuccess = false;
 
     if (activeGenAI) {
       try {
@@ -51,45 +65,75 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: express.Response)
         const response = await result.response;
         finalOutput = response.text();
         tokenCount = (finalOutput.length / 4).toFixed(0); // Rough estimation
+        isSuccess = true;
       } catch (aiError) {
         console.error("Gemini AI Error:", aiError);
         finalOutput = `[Fallback Synthesis] ${voice} perspective on ${platform}: \n\nWe encountered a temporary connection issue with the Alchemist Engine, but here is a strategic breakdown: \n- The core message revolves around optimizing input for ${depth}% depth. \n- Use the ${voice} tone to maintain brand authority. \n- Ready for ${platform} distribution.`;
         tokenCount = "450";
+        isSuccess = false;
       }
     } else {
       // Original Mock System
       await new Promise(resolve => setTimeout(resolve, 2000));
       finalOutput = `[Mock API] Synthesis result in "${voice}" for ${platform}. \n\nTo enable real AI synthesis, please add a valid GEMINI_API_KEY to your backend/.env file. \n\nKey Strategy:\n- Repurpose content with ${depth}% depth.\n- Maintain ${voice} consistency.`;
       tokenCount = "150";
+      isSuccess = true;
     }
 
-    // Save history
-    const synthesisJob = await prisma.synthesisJob.create({
-      data: {
-        sourceText: sourceText || null,
-        url: url || null,
-        outputText: finalOutput,
-        platform: platform || 'Unknown',
-        voice: voice || 'Professional',
-        depth: parseInt(depth) || 70,
-        userId: userId,
-      }
-    });
+    // Wrap all database updates in a transaction for consistency
+    const [synthesisJob] = await prisma.$transaction([
+      // 1. Save history
+      prisma.synthesisJob.create({
+        data: {
+          sourceText: sourceText || null,
+          url: url || null,
+          outputText: finalOutput,
+          platform: platform || 'Unknown',
+          voice: voice || 'Professional',
+          depth: parseInt(depth) || 70,
+          userId: userId,
+        }
+      }),
+      // 2. Log Activity
+      prisma.activity.create({
+        data: {
+          task: `Synthesis: ${platform}`,
+          engine: isUsingPersonalKey ? 'Personal Gemini Key' : (genAI ? 'Gemini 1.5 Pro' : 'Alchemy Forge (Mock)'),
+          status: isSuccess ? 'Completed' : 'Drafted (UI Fallback)',
+          tokens: tokenCount,
+          progress: 100,
+          impact: isSuccess ? '+ High' : '- Neutral',
+          userId: userId
+        }
+      }),
+      // 3. Create Notification
+      prisma.notification.create({
+        data: {
+          title: isSuccess ? 'Synthesis Successful' : 'Synthesis Connection Issue',
+          description: isSuccess 
+            ? `Your ${platform} post has been forged in ${voice} voice.` 
+            : `We had trouble reaching the AI engine, but forged a fallback version for your ${platform} post.`,
+          type: isSuccess ? 'success' : 'warning',
+          icon: isSuccess ? 'Sparkles' : 'AlertCircle',
+          color: isSuccess ? 'emerald-400' : 'amber-400',
+          bg: isSuccess ? 'emerald-500/10' : 'amber-500/10',
+          userId: userId
+        }
+      }),
+      // 4. Deduct Credits if applicable
+      ...(isUsingPersonalKey ? [] : [
+        prisma.user.update({
+          where: { id: userId },
+          data: { credits: { decrement: jobCost } }
+        })
+      ])
+    ]);
 
-    // Log Activity
-    await prisma.activity.create({
-      data: {
-        task: `Content Synthesis (${platform})`,
-        engine: genAI ? 'Gemini 1.5 Pro' : 'Alchemy Forge (Mock)',
-        status: 'Completed',
-        tokens: tokenCount,
-        progress: 100,
-        impact: '+ High',
-        userId: userId
-      }
+    return res.status(200).json({ 
+      job: synthesisJob,
+      creditsDeducted: isUsingPersonalKey ? 0 : jobCost,
+      remainingCredits: isUsingPersonalKey ? user.credits : user.credits - jobCost
     });
-
-    return res.status(200).json({ job: synthesisJob });
   } catch (err: any) {
     console.error("Synthesis Route Error:", err);
     return res.status(500).json({ message: 'Internal Server Error', error: err.message });
