@@ -17,7 +17,8 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
-  Plus
+  Plus,
+  Trash2
 } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { SynthesisJob } from "@/lib/types";
@@ -30,43 +31,63 @@ export default function History() {
   
   const [historyItems, setHistoryItems] = useState<SynthesisJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(q);
   const [selectedItem, setSelectedItem] = useState<SynthesisJob | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    setSearchQuery(q);
-  }, [q]);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    const fetchHistory = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/history`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch history");
-
-        const data = await response.json();
-        setHistoryItems(data);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setError(message);
-      } finally {
-        setIsLoading(false);
+  const fetchHistory = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
       }
-    };
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/history`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
 
+      if (!response.ok) throw new Error("Failed to fetch history");
+
+      const data = await response.json();
+      setHistoryItems(data);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchHistory();
   }, [router]);
+
+  const handleDeleteJob = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this job?")) return;
+    
+    setIsDeleting(id);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/history/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error("Failed to delete");
+      
+      fetchHistory();
+    } catch {
+      alert("Error deleting job");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   const filteredHistory = historyItems.filter(item => {
     if (!searchQuery) return true;
@@ -201,6 +222,13 @@ export default function History() {
                           >
                             <Eye size={14} />
                             View
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteJob(item.id, e)}
+                            disabled={isDeleting === item.id}
+                            className="flex items-center justify-center w-10 h-10 text-red-400/50 hover:text-red-400 bg-white/5 rounded-xl border border-white/5 hover:border-red-400/20 transition-all disabled:opacity-50"
+                          >
+                            {isDeleting === item.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                           </button>
                         </div>
                       </td>
