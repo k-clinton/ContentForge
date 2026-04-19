@@ -37,4 +37,16 @@ router.patch('/:id/read', authMiddleware, async (req: AuthRequest, res: express.
   }
 });
 
+router.post('/read-all', authMiddleware, async (req: AuthRequest, res: express.Response) => {
+  try {
+    await prisma.notification.updateMany({
+      where: { userId: req.user!.userId, isRead: false },
+      data: { isRead: true }
+    });
+    res.json({ message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating notifications' });
+  }
+});
+
 export default router;
