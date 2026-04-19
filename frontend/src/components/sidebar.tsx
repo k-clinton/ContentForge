@@ -31,7 +31,7 @@ export function Sidebar() {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "New Repurpose", href: "/new-repurpose", icon: PlusCircle },
     { name: "History", href: "/history", icon: History },
-    { name: "Vault", href: "/favorites", icon: Star },
+    { name: "Vault", href: "/vault", icon: Star },
     { name: "Credits", href: "/pricing", icon: CreditCard },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
