@@ -20,6 +20,14 @@ model User {
   credits       Int            @default(2500)
   maxCredits    Int            @default(2500)
   plan          String         @default("Pro Member")
+  
+  // Settings & Preferences
+  emailNotifications  Boolean @default(true)
+  inAppNotifications Boolean @default(true)
+  defaultLanguage    String  @default("English")
+  defaultLength      String  @default("Medium")
+  theme              String  @default("dark")
+
   notifications Notification[]
   activities    Activity[]
   synthesisJobs SynthesisJob[]
