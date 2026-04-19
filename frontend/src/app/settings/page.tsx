@@ -30,7 +30,18 @@ function SettingsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [_userData, setUserData] = useState<{ name?: string; email?: string; credits?: number; plan?: string; apiKey?: string } | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", apiKey: "" });
+  const [form, setForm] = useState({ 
+    name: "", 
+    email: "", 
+    password: "", 
+    confirmPassword: "", 
+    apiKey: "",
+    emailNotifications: true,
+    inAppNotifications: true,
+    defaultLanguage: "English",
+    defaultLength: "Medium",
+    theme: "dark"
+  });
 
   useEffect(() => {
     if (sectionParam && sectionParam !== activeSection) {
@@ -49,7 +60,18 @@ function SettingsContent() {
       if (response.ok) {
         const data = await response.json();
         setUserData(data);
-        setForm(f => ({ ...f, name: data.name, email: data.email, apiKey: data.apiKey || "" }));
+        setForm({ 
+          name: data.name || "", 
+          email: data.email || "", 
+          apiKey: data.apiKey || "",
+          password: "",
+          confirmPassword: "",
+          emailNotifications: data.emailNotifications ?? true,
+          inAppNotifications: data.inAppNotifications ?? true,
+          defaultLanguage: data.defaultLanguage || "English",
+          defaultLength: data.defaultLength || "Medium",
+          theme: data.theme || "dark"
+        });
       }
     } catch (e) {
       console.error(e);
@@ -77,7 +99,12 @@ function SettingsContent() {
           name: form.name, 
           email: form.email, 
           password: form.password || undefined,
-          apiKey: form.apiKey || undefined
+          apiKey: form.apiKey || undefined,
+          emailNotifications: form.emailNotifications,
+          inAppNotifications: form.inAppNotifications,
+          defaultLanguage: form.defaultLanguage,
+          defaultLength: form.defaultLength,
+          theme: form.theme
         })
       });
       alert("Settings saved successfully!");
@@ -243,7 +270,7 @@ function SettingsContent() {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 overflow-hidden p-12 text-center">
                 <div className="w-20 h-20 bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-400 mx-auto mb-6">
-                  <CreditCard size={40} />
+                   <CreditCard size={40} />
                 </div>
                 <h3 className="text-2xl font-black text-white mb-2">Alpha Pioneer Plan</h3>
                 <p className="text-zinc-500 font-medium mb-8">You currently have lifetime access to ContentForge Alpha.</p>
@@ -262,11 +289,75 @@ function SettingsContent() {
         );
 
       case 'notifications':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 overflow-hidden">
+              <div className="p-10 border-b border-white/5 bg-white/[0.02]">
+                <h3 className="text-xl font-black font-heading text-white flex items-center gap-3">
+                  <Bell size={20} className="text-indigo-400" />
+                  Alert Preferences
+                </h3>
+              </div>
+              <div className="p-10 space-y-6">
+                {[
+                  { id: 'emailNotifications', label: 'Email Notifications', desc: 'Receive periodic updates and synthesis results via email.' },
+                  { id: 'inAppNotifications', label: 'In-App Notifications', desc: 'Stay updated with live alerts while using ContentForge.' }
+                ].map((pref) => (
+                  <div key={pref.id} className="flex items-center justify-between p-6 bg-white/5 rounded-3xl border border-white/5">
+                    <div>
+                      <h4 className="text-white font-bold text-sm mb-1">{pref.label}</h4>
+                      <p className="text-zinc-500 text-xs">{pref.desc}</p>
+                    </div>
+                    <button 
+                      onClick={() => setForm({...form, [pref.id as any]: !form[pref.id as keyof typeof form]})}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-300 ${form[pref.id as keyof typeof form] ? 'bg-indigo-600' : 'bg-white/10'}`}
+                    >
+                      <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all duration-300 ${form[pref.id as keyof typeof form] ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
       case 'workspace':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] border border-white/5 rounded-[2.5rem] bg-white/[0.02]">
-             <Bell size={48} className="text-zinc-800 mb-4" />
-             <span className="text-zinc-500 text-lg font-medium">Section coming in the next update.</span>
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 overflow-hidden">
+              <div className="p-10 border-b border-white/5 bg-white/[0.02]">
+                <h3 className="text-xl font-black font-heading text-white flex items-center gap-3">
+                  <Globe size={20} className="text-indigo-400" />
+                  Synthesis Preferences
+                </h3>
+              </div>
+              <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">Default Language</label>
+                  <select 
+                    value={form.defaultLanguage}
+                    onChange={e => setForm({...form, defaultLanguage: e.target.value})}
+                    className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:border-indigo-500/30 transition-all outline-none appearance-none"
+                  >
+                    <option value="English">English</option>
+                    <option value="Portuguese">Portuguese</option>
+                    <option value="Spanish">Spanish</option>
+                  </select>
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">Output Strength</label>
+                  <select 
+                    value={form.defaultLength}
+                    onChange={e => setForm({...form, defaultLength: e.target.value})}
+                    className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:border-indigo-500/30 transition-all outline-none appearance-none"
+                  >
+                    <option value="Short">Concise (Fast)</option>
+                    <option value="Medium">Standard (Balanced)</option>
+                    <option value="Long">Extended (Detailed)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         );
       default:
