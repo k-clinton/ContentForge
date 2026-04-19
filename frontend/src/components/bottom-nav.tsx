@@ -18,7 +18,7 @@ export function BottomNav() {
     { name: "Home", href: "/", icon: LayoutDashboard },
     { name: "New", href: "/new-repurpose", icon: PlusCircle },
     { name: "Archive", href: "/history", icon: History },
-    { name: "Vault", href: "/favorites", icon: Star },
+    { name: "Vault", href: "/vault", icon: Star },
     { name: "Config", href: "/settings", icon: Settings },
   ];
 
