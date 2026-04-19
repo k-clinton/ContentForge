@@ -43,7 +43,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: express.Response)
 
     if (activeGenAI) {
       try {
-        const model = activeGenAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const model = activeGenAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `
           You are an expert social media alchemist at ContentForge. 
           Your task is to repurpose the following content into a high-impact ${platform} post.
@@ -67,7 +67,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: express.Response)
         tokenCount = (finalOutput.length / 4).toFixed(0); // Rough estimation
         isSuccess = true;
       } catch (aiError) {
-        console.error("Gemini AI Error:", aiError);
+        console.error("Gemini AI Engine Error Details:", aiError);
         finalOutput = `[Fallback Synthesis] ${voice} perspective on ${platform}: \n\nWe encountered a temporary connection issue with the Alchemist Engine, but here is a strategic breakdown: \n- The core message revolves around optimizing input for ${depth}% depth. \n- Use the ${voice} tone to maintain brand authority. \n- Ready for ${platform} distribution.`;
         tokenCount = "450";
         isSuccess = false;
