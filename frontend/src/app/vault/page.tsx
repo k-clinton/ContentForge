@@ -39,7 +39,7 @@ const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   );
 };
 
-export default function Favorites() {
+export default function Vault() {
   const router = useRouter();
   const categories = ["All", "LinkedIn", "X", "Email", "Blog Posts"];
 
@@ -85,6 +85,7 @@ export default function Favorites() {
   }, []);
 
   const handleDelete = async (id: string) => {
+    if (!confirm("Remove this item from your vault?")) return;
     try {
       const token = localStorage.getItem("token");
       await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/vault/${id}`, {
@@ -111,13 +112,13 @@ export default function Favorites() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full -z-10" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/5 blur-[100px] rounded-full -z-10" />
 
-        <TopNav title="Your Library" />
+        <TopNav title="The Vault" />
 
         <div className="px-12 py-12 max-w-[1400px] mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="max-w-xl">
               <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black tracking-[0.2em] uppercase rounded-full border border-indigo-500/20 w-fit mb-4">
-                Vault
+                Archive
               </div>
               <h1 className="text-5xl font-black font-heading tracking-tight text-white mb-4">
                 Saved <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Masterpieces</span>
