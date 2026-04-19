@@ -27,34 +27,54 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number }>> = {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReading, setIsReading] = useState(false);
   const [error, setError] = useState("");
 
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/notifications`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch notifications");
+
+      const data = await response.json();
+      setNotifications(data);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No authentication token found");
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/notifications`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch notifications");
-
-        const data = await response.json();
-        setNotifications(data);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchNotifications();
   }, []);
+
+  const handleMarkAllAsRead = async () => {
+    setIsReading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/notifications/read-all`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      fetchNotifications();
+    } catch {
+      alert("Failed to update notifications");
+    } finally {
+      setIsReading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-surface text-on-surface overflow-hidden">
       <Sidebar />
@@ -78,8 +98,12 @@ export default function NotificationsPage() {
                 </h1>
                 <p className="text-zinc-500 text-lg font-medium">Stay updated with your forge operations and system alerts.</p>
               </div>
-              <button className="px-6 py-3 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5">
-                Mark all as read
+              <button 
+                onClick={handleMarkAllAsRead}
+                disabled={isReading}
+                className="px-6 py-3 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5 disabled:opacity-50"
+              >
+                {isReading ? "Synchronizing..." : "Mark all as read"}
               </button>
             </div>
           </section>
