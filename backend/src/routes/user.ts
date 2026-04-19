@@ -13,7 +13,10 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: express.Response
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, credits: true, plan: true, createdAt: true, apiKey: true, maxCredits: true }
+      select: { 
+        id: true, name: true, email: true, credits: true, plan: true, createdAt: true, apiKey: true, maxCredits: true,
+        emailNotifications: true, inAppNotifications: true, defaultLanguage: true, defaultLength: true, theme: true
+      }
     });
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -29,7 +32,7 @@ router.put('/settings', authMiddleware, async (req: AuthRequest, res: express.Re
     const userId = req.user?.userId;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    const { name, email, password, apiKey } = req.body;
+    const { name, email, password, apiKey, emailNotifications, inAppNotifications, defaultLanguage, defaultLength, theme } = req.body;
 
     const updateData: any = {};
     if (name) updateData.name = name;
@@ -45,6 +48,12 @@ router.put('/settings', authMiddleware, async (req: AuthRequest, res: express.Re
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
+    
+    if (emailNotifications !== undefined) updateData.emailNotifications = emailNotifications;
+    if (inAppNotifications !== undefined) updateData.inAppNotifications = inAppNotifications;
+    if (defaultLanguage) updateData.defaultLanguage = defaultLanguage;
+    if (defaultLength) updateData.defaultLength = defaultLength;
+    if (theme) updateData.theme = theme;
 
     // If nothing to update, return early
     if (Object.keys(updateData).length === 0) {
