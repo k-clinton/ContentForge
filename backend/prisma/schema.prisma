@@ -28,6 +28,10 @@ model User {
   defaultLength      String  @default("Medium")
   theme              String  @default("dark")
 
+  // Verification
+  emailVerified      Boolean @default(false)
+  verificationToken  String? @unique
+
   notifications Notification[]
   activities    Activity[]
   synthesisJobs SynthesisJob[]
