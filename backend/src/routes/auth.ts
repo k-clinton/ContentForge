@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import prisma from '../lib/prisma';
 import { emailService } from '../lib/email';
 import { authMiddleware } from '../middleware/auth';
@@ -18,44 +19,60 @@ router.post('/register', async (req, res) => {
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, name }
+      data: { 
+        email, 
+        password: hashedPassword, 
+        name,
+        verificationToken,
+        emailVerified: false
+      }
     });
 
-    // Send Welcome Email
-    await emailService.sendWelcomeEmail(user.email, user.name || 'Alchemist');
+    // Send Verification Email instead of Welcome (Welcome comes after verification)
+    await emailService.sendVerificationEmail(user.email, user.name || 'Alchemist', verificationToken);
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name || '' } });
+    res.json({ message: 'Verification email sent. Please check your inbox.' });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Error creating user' });
   }
 });
 
-// Forgot Password
-router.post('/forgot-password', async (req, res) => {
-  const { email } = req.body;
+// Verify Email
+router.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token || typeof token !== 'string') {
+    return res.status(400).json({ message: 'Missing or invalid token' });
+  }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { verificationToken: token }
+    });
+
     if (!user) {
-      // Security best practice: don't reveal if user exists
-      return res.json({ message: 'If an account exists with this email, you will receive a reset link.' });
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
     }
 
-    // Generate a secure token (mocking for now, usually stored in DB with expiration)
-    const resetToken = jwt.sign({ userId: user.id, type: 'password-reset' }, JWT_SECRET, { expiresIn: '1h' });
-    
-    // In a real app, you might save this token to the user record in DB
-    // await prisma.user.update({ where: { id: user.id }, data: { resetToken } });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null
+      }
+    });
 
-    await emailService.sendPasswordResetEmail(user.email, user.name || 'Alchemist', resetToken);
+    // Now send the actual Welcome Email
+    await emailService.sendWelcomeEmail(user.email, user.name || 'Alchemist');
 
-    res.json({ message: 'If an account exists with this email, you will receive a reset link.' });
+    res.json({ message: 'Email verified successfully! You can now log in.' });
   } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ message: 'Error processing request' });
+    console.error('Verification error:', error);
+    res.status(500).json({ message: 'Error verifying email' });
   }
 });
 
@@ -66,6 +83,14 @@ router.post('/login', async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+    // Check if email is verified
+    if (!user.emailVerified) {
+      return res.status(403).json({ 
+        message: 'Please verify your email address before logging in.',
+        unverified: true 
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
@@ -78,12 +103,33 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.json({ message: 'If an account exists with this email, you will receive a reset link.' });
+    }
+
+    const resetToken = jwt.sign({ userId: user.id, type: 'password-reset' }, JWT_SECRET, { expiresIn: '1h' });
+    
+    await emailService.sendPasswordResetEmail(user.email, user.name || 'Alchemist', resetToken);
+
+    res.json({ message: 'If an account exists with this email, you will receive a reset link.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Error processing request' });
+  }
+});
+
 // Profile
 router.get('/me', authMiddleware, async (req: AuthRequest, res: express.Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.userId },
-      select: { id: true, email: true, name: true, credits: true, plan: true, avatar: true }
+      select: { id: true, email: true, name: true, credits: true, plan: true, avatar: true, emailVerified: true }
     });
     res.json(user);
   } catch (error) {
