@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
+import { emailService } from '../lib/email';
 import { authMiddleware } from '../middleware/auth';
 import type { AuthRequest } from '../middleware/auth';
 
@@ -21,10 +22,40 @@ router.post('/register', async (req, res) => {
       data: { email, password: hashedPassword, name }
     });
 
+    // Send Welcome Email
+    await emailService.sendWelcomeEmail(user.email, user.name || 'Alchemist');
+
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, email: user.email, name: user.name || '' } });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Error creating user' });
+  }
+});
+
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Security best practice: don't reveal if user exists
+      return res.json({ message: 'If an account exists with this email, you will receive a reset link.' });
+    }
+
+    // Generate a secure token (mocking for now, usually stored in DB with expiration)
+    const resetToken = jwt.sign({ userId: user.id, type: 'password-reset' }, JWT_SECRET, { expiresIn: '1h' });
+    
+    // In a real app, you might save this token to the user record in DB
+    // await prisma.user.update({ where: { id: user.id }, data: { resetToken } });
+
+    await emailService.sendPasswordResetEmail(user.email, user.name || 'Alchemist', resetToken);
+
+    res.json({ message: 'If an account exists with this email, you will receive a reset link.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Error processing request' });
   }
 });
 
