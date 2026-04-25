@@ -9,12 +9,17 @@ import synthesisRoutes from './routes/synthesis';
 import historyRoutes from './routes/history';
 import vaultRoutes from './routes/vault';
 import userRoutes from './routes/user';
+import webhookRoutes from './routes/webhooks';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(morgan('dev'));
+
+// Webhooks (Should be before express.json() if you need raw body for signature verification)
+app.use('/api/webhooks', webhookRoutes);
+
 app.use(express.json());
 
 // Routes
