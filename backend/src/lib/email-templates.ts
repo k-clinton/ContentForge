@@ -174,3 +174,29 @@ export const creditLowTemplate = (name: string, currentCredits: number) => `
 </body>
 </html>
 `;
+
+export const verificationTemplate = (name: string, verificationUrl: string) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="${baseStyles}">
+  <div style="${containerStyles}">
+    <div style="${headerStyles}">
+      ${logo}
+    </div>
+    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 16px;">Verify your email address</h1>
+    <p>Hi ${name},</p>
+    <p>Thanks for signing up for ContentForge! Please click the button below to verify your email address and activate your account:</p>
+    <div style="text-align: center;">
+      <a href="${verificationUrl}" style="${buttonStyles}">Verify Email</a>
+    </div>
+    <p style="font-size: 14px; color: ${mutedColor};">If you didn't create an account, you can safely ignore this email.</p>
+    <div style="${footerStyles}">
+      &copy; 2026 ContentForge. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+`;
