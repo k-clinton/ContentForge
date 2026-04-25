@@ -1,5 +1,6 @@
 import express from 'express';
 import prisma from '../lib/prisma';
+import { emailService } from '../lib/email';
 import { authMiddleware, type AuthRequest } from '../middleware/auth';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -128,6 +129,13 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: express.Response)
         })
       ])
     ]);
+
+    // Credit Low Nudge: Check if credits dropped below threshold (e.g., 200)
+    if (!isUsingPersonalKey && user.credits - jobCost < 200 && user.credits >= 200) {
+      // Use fire-and-forget for the email so it doesn't slow down the response
+      emailService.sendCreditLowWarning(user.email, user.name || 'Alchemist', user.credits - jobCost)
+        .catch(err => console.error('Error sending credit warning:', err));
+    }
 
     return res.status(200).json({ 
       job: synthesisJob,
