@@ -3,7 +3,8 @@ import {
   welcomeTemplate, 
   passwordResetTemplate, 
   receiptTemplate, 
-  creditLowTemplate 
+  creditLowTemplate,
+  verificationTemplate
 } from './email-templates';
 
 /**
@@ -11,6 +12,7 @@ import {
  */
 interface IEmailService {
   sendWelcomeEmail(email: string, name: string): Promise<void>;
+  sendVerificationEmail(email: string, name: string, token: string): Promise<void>;
   sendPasswordResetEmail(email: string, name: string, token: string): Promise<void>;
   sendReceiptEmail(email: string, name: string, amount: string, planName: string): Promise<void>;
   sendCreditLowWarning(email: string, name: string, currentCredits: number): Promise<void>;
@@ -27,6 +29,27 @@ class EmailService implements IEmailService {
     }
     this.resend = new Resend(apiKey || 're_mock_key');
     this.fromEmail = process.env.FROM_EMAIL || 'ContentForge <onboarding@resend.dev>';
+  }
+
+  /**
+   * Send a verification email to a new user
+   */
+  async sendVerificationEmail(email: string, name: string, token: string) {
+    try {
+      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+      const html = verificationTemplate(name, verificationUrl);
+
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: email,
+        subject: 'Verify your ContentForge account',
+        html: html,
+      });
+
+      console.log(`Verification email sent to ${email}`);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+    }
   }
 
   /**
@@ -86,11 +109,11 @@ class EmailService implements IEmailService {
       await this.resend.emails.send({
         from: this.fromEmail,
         to: email,
-        subject: `Your ContentForge Receipt - ${planName}`,
+        subject: `Your ContentForge Receipt - \${planName}`,
         html: html,
       });
 
-      console.log(`Receipt email sent to ${email}`);
+      console.log(`Receipt email sent to \${email}`);
     } catch (error) {
       console.error('Failed to send receipt email:', error);
     }
