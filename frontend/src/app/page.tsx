@@ -19,6 +19,7 @@ import {
   Sparkles,
   Loader2
 } from "lucide-react";
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -46,14 +47,12 @@ export default function Dashboard() {
     // Fetch stats from backend
     const fetchDashboardData = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-        
         const [statsRes, historyRes] = await Promise.all([
-          fetch(`${apiUrl}/api/user/dashboard-stats`, {
-            headers: { "Authorization": `Bearer ${token}` }
+          fetch(getApiUrl("/api/user/dashboard-stats"), {
+            headers: getAuthHeaders(token)
           }),
-          fetch(`${apiUrl}/api/history`, {
-            headers: { "Authorization": `Bearer ${token}` }
+          fetch(getApiUrl("/api/history"), {
+            headers: getAuthHeaders(token)
           })
         ]);
 
