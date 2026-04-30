@@ -92,9 +92,9 @@ function SettingsContent() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem("token");
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/user/settings`, {
+      await fetch(getApiUrl("/api/user/settings"), {
         method: "PUT",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({ 
           name: form.name, 
           email: form.email, 
@@ -422,6 +422,15 @@ function SettingsContent() {
 export default function Settings() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <SettingsContent />
+    </Suspense>
+  );
+}
+gsContent />
+    </Suspense>
+  );
+}
+er-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
       <SettingsContent />
     </Suspense>
   );
