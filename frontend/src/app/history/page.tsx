@@ -22,10 +22,10 @@ import {
 } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { SynthesisJob } from "@/lib/types";
-
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 
 export default function History() {
-  const router = useRouter(); // Use useRouter for protection
+  const router = useRouter();
   const searchParams = useSearchParams();
   const q = searchParams.get('q') || "";
   
@@ -43,10 +43,8 @@ export default function History() {
         router.push("/login");
         return;
       }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/history`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+      const response = await fetch(getApiUrl("/api/history"), {
+        headers: getAuthHeaders(token)
       });
 
       if (!response.ok) throw new Error("Failed to fetch history");
@@ -72,11 +70,9 @@ export default function History() {
     setIsDeleting(id);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/history/${id}`, {
+      const response = await fetch(getApiUrl(`/api/history/${id}`), {
         method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        headers: getAuthHeaders(token)
       });
 
       if (!response.ok) throw new Error("Failed to delete");
@@ -109,7 +105,6 @@ export default function History() {
         <TopNav title="History & Archive" />
         
         <div className="max-w-[1400px] mx-auto px-12 py-12">
-          {/* ... existing header and filters ... */}
           <section className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
              <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-12">
                 <div className="max-w-xl">
@@ -151,7 +146,6 @@ export default function History() {
 
           <section className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
             <div className="overflow-x-auto">
-              {/* ... table content ... */}
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/5">
@@ -237,7 +231,6 @@ export default function History() {
                 </tbody>
               </table>
             </div>
-            {/* ... pagination ... */}
              <div className="px-10 py-8 border-t border-white/5 flex items-center justify-between bg-black/10">
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Showing {filteredHistory.length} results</span>
               <div className="flex items-center gap-2">
@@ -302,7 +295,7 @@ export default function History() {
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(selectedItem.outputText);
-                      alert("Copied to clipboard!");
+                      alert("Magic copied to clipboard!");
                     }}
                     className="px-8 py-4 bg-white/5 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all"
                   >
