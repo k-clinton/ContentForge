@@ -1,7 +1,11 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'alchemy_forge_secret_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'alchemy_forge_secret_2026_dev_only';
+
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET MUST be set in production!');
+}
 
 export interface AuthRequest extends express.Request {
   user?: {
