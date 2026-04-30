@@ -88,11 +88,9 @@ export default function Vault() {
     if (!confirm("Remove this item from your vault?")) return;
     try {
       const token = localStorage.getItem("token");
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/vault/${id}`, {
+      await fetch(getApiUrl(`/api/vault/${id}`), {
         method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        headers: getAuthHeaders(token)
       });
       fetchVault();
     } catch {
@@ -211,6 +209,12 @@ export default function Vault() {
 
         <button className="fixed bottom-12 right-12 w-16 h-16 bg-indigo-600 text-white rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-indigo-500/40 hover:scale-110 active:scale-95 transition-all z-50 group">
           <Plus size={32} className="group-hover:rotate-90 transition-transform duration-500" />
+        </button>
+      </main>
+    </div>
+  );
+}
+   <Plus size={32} className="group-hover:rotate-90 transition-transform duration-500" />
         </button>
       </main>
     </div>
