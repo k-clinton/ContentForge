@@ -8,7 +8,15 @@ import { authMiddleware } from '../middleware/auth';
 import type { AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'alchemy_forge_secret_2026';
+
+const envJwtSecret = process.env.JWT_SECRET;
+if (!envJwtSecret) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET MUST be set in production!');
+  }
+  console.warn('JWT_SECRET is missing, using insecure fallback for development');
+}
+const JWT_SECRET = envJwtSecret || 'alchemy_forge_secret_2026_dev_only';
 
 // Register
 router.post('/register', async (req, res) => {
