@@ -14,6 +14,7 @@ import {
   MoreVertical,
   Loader2
 } from "lucide-react";
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 
 import type { Notification } from "@/lib/types";
 
@@ -35,10 +36,8 @@ export default function NotificationsPage() {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/notifications`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+      const response = await fetch(getApiUrl("/api/notifications"), {
+        headers: getAuthHeaders(token)
       });
 
       if (!response.ok) throw new Error("Failed to fetch notifications");
@@ -61,11 +60,9 @@ export default function NotificationsPage() {
     setIsReading(true);
     try {
       const token = localStorage.getItem("token");
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/notifications/read-all`, {
+      await fetch(getApiUrl("/api/notifications/read-all"), {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        headers: getAuthHeaders(token)
       });
       fetchNotifications();
     } catch {
