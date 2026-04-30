@@ -14,6 +14,7 @@ import {
   Loader2,
   AlertCircle
 } from "lucide-react";
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 
 const stats = [
   { label: "Synthesis Rate", value: "98.2%", icon: Cpu, color: "text-indigo-400" },
@@ -44,10 +45,8 @@ export default function ActivityPage() {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Authentication required");
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/activity`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+        const response = await fetch(getApiUrl("/api/activity"), {
+          headers: getAuthHeaders(token)
         });
 
         if (!response.ok) throw new Error("Failed to fetch activity logs");
