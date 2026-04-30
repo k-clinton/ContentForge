@@ -44,7 +44,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: express.Response)
 
     if (activeGenAI) {
       try {
-        const model = activeGenAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = activeGenAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const prompt = `
           You are an expert social media alchemist at ContentForge. 
           Your task is to repurpose the following content into a high-impact ${platform} post.
@@ -149,3 +149,4 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: express.Response)
 });
 
 export default router;
+;
