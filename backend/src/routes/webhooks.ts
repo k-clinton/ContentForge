@@ -5,11 +5,19 @@ import { emailService } from '../lib/email';
 const router = express.Router();
 
 /**
- * Stripe Webhook Handler (Mock)
- * In a real app, use stripe.webhooks.constructEvent to verify signatures.
+ * Stripe Webhook Handler
+ * 
+ * SECURITY NOTE: In production, you MUST verify the Stripe signature to prevent spoofing.
+ * Use: stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET)
  */
 router.post('/stripe', async (req, res) => {
   const event = req.body;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!webhookSecret && process.env.NODE_ENV === 'production') {
+    console.error('CRITICAL: STRIPE_WEBHOOK_SECRET is missing in production!');
+    return res.status(500).json({ error: 'Webhook secret not configured' });
+  }
 
   // Handle specific event types
   switch (event.type) {
