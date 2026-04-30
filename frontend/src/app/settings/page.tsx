@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 import {
   User,
   ShieldCheck,
@@ -422,15 +423,6 @@ function SettingsContent() {
 export default function Settings() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
-      <SettingsContent />
-    </Suspense>
-  );
-}
-gsContent />
-    </Suspense>
-  );
-}
-er-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
       <SettingsContent />
     </Suspense>
   );

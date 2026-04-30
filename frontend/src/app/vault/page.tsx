@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import Image from "next/image";
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 import {
   Heart,
   Copy,
@@ -209,12 +210,6 @@ export default function Vault() {
 
         <button className="fixed bottom-12 right-12 w-16 h-16 bg-indigo-600 text-white rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-indigo-500/40 hover:scale-110 active:scale-95 transition-all z-50 group">
           <Plus size={32} className="group-hover:rotate-90 transition-transform duration-500" />
-        </button>
-      </main>
-    </div>
-  );
-}
-   <Plus size={32} className="group-hover:rotate-90 transition-transform duration-500" />
         </button>
       </main>
     </div>

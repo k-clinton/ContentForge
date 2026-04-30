@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 import { 
   Link as LinkIcon, 
   UploadCloud, 
@@ -288,19 +289,6 @@ export default function NewRepurpose() {
                     </div>
                   </div>
                   <button onClick={handleSynthesize} disabled={isGenerating} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-500/20 hover:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-3">
-                    <Wand2 size={18} />
-                    Synthesize Magic
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
-  );
-}
-ver:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-3">
                     <Wand2 size={18} />
                     Synthesize Magic
                   </button>
