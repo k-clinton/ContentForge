@@ -109,11 +109,11 @@ class EmailService implements IEmailService {
       await this.resend.emails.send({
         from: this.fromEmail,
         to: email,
-        subject: `Your ContentForge Receipt - \${planName}`,
+        subject: `Your ContentForge Receipt - ${planName}`,
         html: html,
       });
 
-      console.log(`Receipt email sent to \${email}`);
+      console.log(`Receipt email sent to ${email}`);
     } catch (error) {
       console.error('Failed to send receipt email:', error);
     }
