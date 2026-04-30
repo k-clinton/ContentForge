@@ -16,6 +16,7 @@ async function main() {
       password: hashedPassword,
       credits: 2450,
       plan: 'Pro Member',
+      emailVerified: true,
     },
   });
 
