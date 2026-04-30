@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 import { GoogleIcon, GitHubIcon } from "@/components/icons";
+import { getApiUrl, getAuthHeaders } from "@/lib/api";
 
 export default function Login() {
   const router = useRouter();
@@ -19,10 +20,10 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/login`, {
+      const response = await fetch(getApiUrl("/api/auth/login"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        headers: getAuthHeaders(null),
+        body: JSON.stringify({ email, password })
       });
 
       const data = await response.json();
@@ -31,110 +32,121 @@ export default function Login() {
         throw new Error(data.message || "Failed to sign in");
       }
 
+      // Store token and user data
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Redirect to dashboard
       router.push("/");
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to sign in";
-      setError(message);
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-500/10 blur-[150px] rounded-full -z-10 translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/10 blur-[120px] rounded-full -z-10 -translate-x-1/2 translate-y-1/2" />
-
-      <div className="w-full max-w-[480px] animate-in fade-in zoom-in-95 duration-700">
-        <div className="flex flex-col items-center mb-12">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-[0_0_30px_rgba(99,102,241,0.4)] mb-6">
-            <Sparkles size={32} fill="currentColor" />
-          </div>
-          <h1 className="text-4xl font-black text-white font-heading tracking-tight mb-2">Welcome Back</h1>
-          <p className="text-zinc-500 font-medium">Continue your content alchemy journey</p>
+    <div className="min-h-screen bg-black flex overflow-hidden">
+      {/* Visual Side */}
+      <div className="hidden lg:flex flex-1 relative bg-zinc-950 items-center justify-center overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-30">
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/30 blur-[120px] rounded-full" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/30 blur-[120px] rounded-full" />
         </div>
-
-        <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/5 shadow-2xl">
+        
+        <div className="relative z-10 max-w-xl px-12 space-y-10">
+          <div className="w-16 h-16 bg-white/10 backdrop-blur-2xl rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl">
+            <Sparkles className="text-white" size={32} />
+          </div>
           <div className="space-y-6">
+            <h2 className="text-6xl font-black text-white font-heading tracking-tighter leading-none">
+              Welcome to the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Alchemy</span> Forge.
+            </h2>
+            <p className="text-zinc-500 text-xl font-medium leading-relaxed">
+              Step back into the laboratory and continue your journey of digital transmutation.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Form Side */}
+      <div className="flex-1 flex items-center justify-center p-8 md:p-16 xl:p-24 bg-black relative">
+        <div className="max-w-md w-full space-y-12 relative z-10 animate-in fade-in slide-in-from-right-4 duration-700">
+          <div className="space-y-4">
+            <h1 className="text-4xl font-black text-white font-heading tracking-tight">Sign In</h1>
+            <p className="text-zinc-500 font-medium">Continue your alchemy journey.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-8">
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-[10px] font-black uppercase tracking-widest text-center animate-shake">
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-sm font-bold flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                 {error}
               </div>
             )}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Email Address</label>
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="name@example.com" 
-                className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:border-indigo-500/50 transition-all outline-none"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center px-1">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Password</label>
-                <button className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300">Forgot?</button>
+
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">Email Address</label>
+                <input 
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:border-indigo-500/50 transition-all outline-none" 
+                  placeholder="aris@example.com"
+                />
               </div>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••" 
-                className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:border-indigo-500/50 transition-all outline-none"
-              />
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Password</label>
+                  <Link href="/forgot-password" title="Forgot Password?" className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-white transition-colors">Recover</Link>
+                </div>
+                <input 
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:border-indigo-500/50 transition-all outline-none" 
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
             <button 
-              type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+              className="w-full bg-white hover:bg-zinc-200 text-black py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
             >
-              {isLoading ? "Forging Access..." : "Sign In to Forge"}
+              {isLoading ? "Signing In..." : "Sign In"}
               {!isLoading && <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />}
             </button>
+          </form>
 
-            <div className="relative py-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/5"></div>
-              </div>
-              <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
-                <span className="bg-surface px-4 text-zinc-600">Or continue with</span>
-              </div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/5"></div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => alert("Google OAuth coming soon!")}
-                className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-zinc-300 hover:text-white"
-              >
-                <GoogleIcon size={18} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Google</span>
-              </button>
-              <button
-                onClick={() => alert("GitHub OAuth coming soon!")}
-                className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-zinc-300 hover:text-white"
-              >
-                <GitHubIcon size={18} />
-                <span className="text-[10px] font-black uppercase tracking-widest">GitHub</span>
-              </button>
+            <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
+              <span className="bg-black px-4 text-zinc-600">Or continue with</span>
             </div>
           </div>
-        </form>
 
-        <p className="mt-8 text-center text-zinc-500 text-sm font-medium">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 font-bold">Create one for free</Link>
-        </p>
+          <div className="grid grid-cols-2 gap-4">
+            <button className="flex items-center justify-center gap-3 py-4 bg-zinc-900 border border-white/5 rounded-2xl text-white text-xs font-bold hover:bg-zinc-800 transition-all">
+              <GoogleIcon className="w-5 h-5" />
+              Google
+            </button>
+            <button className="flex items-center justify-center gap-3 py-4 bg-zinc-900 border border-white/5 rounded-2xl text-white text-xs font-bold hover:bg-zinc-800 transition-all">
+              <GitHubIcon className="w-5 h-5 text-white" />
+              GitHub
+            </button>
+          </div>
 
-        <div className="mt-12 flex items-center justify-center gap-2 text-zinc-600">
-          <ShieldCheck size={14} />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Enterprise Grade Security</span>
+          <p className="text-center text-zinc-600 text-sm font-medium">
+            Don't have an account?{" "}
+            <Link href="/signup" className="text-white hover:text-indigo-400 font-bold underline underline-offset-4 transition-colors">Sign up</Link>
+          </p>
         </div>
       </div>
     </div>
